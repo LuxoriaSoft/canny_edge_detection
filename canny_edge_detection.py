@@ -57,7 +57,7 @@ def canny_edge_detector(image):
     return final_edges
 
 # Load Image
-image = plt.imread('IMG_0084.jpg')
+image = plt.imread('image.png')
 # Convert it to Grayscale
 gray_image = np.dot(image[..., :3], [0.2989, 0.5870, 0.1140])
 # Apply Canny Edge Detection
