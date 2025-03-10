@@ -188,7 +188,7 @@ This project is useful in scenarios such as:
 
 This project is licensed under the Apache 2.0 License - see the [LICENSE](LICENSE) file for details.
 
-## Sources
+## Sources / Documentations
 
 - https://docs.opencv.org/3.4/d8/d83/tutorial_py_grabcut.html
 - https://pyimagesearch.com/2020/07/27/opencv-grabcut-foreground-segmentation-and-extraction/
