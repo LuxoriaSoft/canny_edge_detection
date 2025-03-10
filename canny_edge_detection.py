@@ -1,105 +1,82 @@
-import numpy as np
 import cv2
+import numpy as np
 import matplotlib.pyplot as plt
-from scipy.ndimage import gaussian_filter
-from skimage.morphology import dilation, closing, footprint_rectangle
-from scipy.special import softmax
+from skimage.morphology import closing, footprint_rectangle
 
-# Multi-Scale Canny Edge Detection with Morphological Refinement
-def multi_scale_canny(image, sigma_list=[1.0, 2.0, 3.0], low_threshold=50, high_threshold=150):
+# Function for GrabCut segmentation
+def grabcut_foreground(image):
+    # Convert image to 8-bit color
+    image = (image * 255).astype(np.uint8) if image.max() <= 1 else image
+
+    # Initialize a mask for GrabCut
+    mask = np.zeros(image.shape[:2], np.uint8)
+    
+    # Background and foreground models, required by GrabCut
+    bgd_model = np.zeros((1, 65), np.float64)
+    fgd_model = np.zeros((1, 65), np.float64)
+    
+    # Define a bounding box (change as per your requirement)
+    rect = (50, 50, image.shape[1]-100, image.shape[0]-100)  # (x, y, width, height)
+    
+    # Run GrabCut
+    cv2.grabCut(image, mask, rect, bgd_model, fgd_model, 5, cv2.GC_INIT_WITH_RECT)
+    
+    # Mask the background pixels as 0 and foreground pixels as 1
+    fg_mask = np.where((mask == 2) | (mask == 0), 0, 1).astype(np.float64)
+    return fg_mask
+
+# Function to refine with Canny Edge Detection
+def multi_scale_canny(image, sigma_list=[1.0, 2.0, 3.0]):
     edges_combined = np.zeros_like(image)
     
+    # Apply multi-scale Canny edge detection
     for sigma in sigma_list:
-        blurred = gaussian_filter(image, sigma=sigma)  # Multi-scale smoothing
-        edges = cv2.Canny((blurred * 255).astype(np.uint8), low_threshold, high_threshold)
+        blurred = cv2.GaussianBlur(image, (5, 5), sigma)  # Gaussian smoothing
+        edges = cv2.Canny((blurred * 255).astype(np.uint8), 50, 150)
         edges_combined = np.maximum(edges_combined, edges)  # Combine scales
     
-    # Apply Morphological Refinement
+    # Close small gaps in edges
     edges_refined = closing(edges_combined, footprint_rectangle((3, 3)))  # Close gaps
-    edges_refined = dilation(edges_refined, footprint_rectangle((2, 2)))  # Strengthen edges
     return edges_refined
 
-# GrabCut Foreground Segmentation with Improved Mask Refinement
-def grabcut_foreground(image_color):
-    # Ensure image is in CV_8UC3 format
-    image_color = (image_color * 255).astype(np.uint8) if image_color.max() <= 1 else image_color
+# Function to compute foreground and background probabilities
+def compute_foreground_background_probability(image_rgb, edges_refined):
+    fg_prob = grabcut_foreground(image_rgb)  # Extract foreground probability map
 
-    # Create an initial mask, background and foreground models
-    mask = np.zeros(image_color.shape[:2], np.uint8)
-    bg_model = np.zeros((1, 65), np.float64)
-    fg_model = np.zeros((1, 65), np.float64)
+    # Calculate the foreground score (mean of foreground probability)
+    foreground_score = np.mean(fg_prob)
+    background_score = 1 - foreground_score  # Background is the complement
     
-    # Define a bounding box for GrabCut (dynamically adjust if needed)
-    rect = (50, 50, image_color.shape[1]-50, image_color.shape[0]-50)  # Adjust the bounding box as needed
-    cv2.grabCut(image_color, mask, rect, bg_model, fg_model, 5, cv2.GC_INIT_WITH_RECT)
+    # Calculate the edge-weighted foreground score (based on refined edges)
+    edge_weighted_fg = np.sum(fg_prob * (edges_refined / 255)) / np.sum(edges_refined / 255) if np.sum(edges_refined) > 0 else 0
     
-    fg_mask = np.where((mask == 2) | (mask == 0), 0, 1).astype(np.float64)  # Extract foreground
-    fg_mask = closing(fg_mask, footprint_rectangle((5, 5)))  # Apply closing to refine the mask
-    return fg_mask  # Foreground probability map
+    return fg_prob, foreground_score, background_score, edge_weighted_fg
 
-# Combine Canny Edges and Foreground Information
-def combine_edges_foreground(edges, fg_prob, alpha=0.7):
-    # Normalize the foreground probability map to [0, 1]
-    fg_prob_norm = (fg_prob - np.min(fg_prob)) / (np.max(fg_prob) - np.min(fg_prob))
-    
-    # Apply a weighted sum (alpha controls the balance between edges and foreground)
-    combined = alpha * edges + (1 - alpha) * fg_prob_norm
-    return np.clip(combined, 0, 1)  # Ensure the combined result is within [0, 1]
-
-# Apply Thresholding and Further Refinement
-def threshold_and_refine(combined, threshold=0.5):
-    # Threshold the combined result to create a binary mask
-    binary_mask = (combined >= threshold).astype(np.uint8)
-    
-    # Apply additional morphological operations to clean up the binary mask
-    refined_mask = closing(binary_mask, footprint_rectangle((5, 5)))  # Closing to fill holes
-    refined_mask = dilation(refined_mask, footprint_rectangle((3, 3)))  # Strengthen mask
-    
-    return refined_mask
-
-# Compute Probability Scores
-def compute_probability_scores(fg_prob, edges):
-    fg_prob_norm = (fg_prob - np.min(fg_prob)) / (np.max(fg_prob) - np.min(fg_prob))  # Normalize
-    weighted_fg = softmax(fg_prob_norm.ravel())  # Apply softmax
-
-    foreground_score = np.mean(weighted_fg)
-    edge_weighted_score = np.sum(fg_prob * (edges / 255)) / np.sum(edges / 255)
-    
-    return foreground_score, edge_weighted_score
-
-# Load and Preprocess Image
-image = cv2.imread("image2.jpg")
-image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # Convert to RGB (for correct display)
+# Load and preprocess the image
+image = cv2.imread("image2.jpg")  # Load your image here (replace with your file path)
+image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # Convert to RGB for correct display
 gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) / 255.0  # Normalize to [0,1]
 
-# Apply Multi-Scale Canny
-edges = multi_scale_canny(gray_image)
+# Apply multi-scale Canny for edge detection
+edges_refined = multi_scale_canny(gray_image)
 
-# Compute Foreground Probability using GrabCut
-fg_prob = grabcut_foreground(image_rgb)  # Use RGB image instead of grayscale
+# Compute foreground and background probabilities
+fg_prob, foreground_score, background_score, edge_weighted_fg = compute_foreground_background_probability(image_rgb, edges_refined)
 
-# Combine Edge and Foreground Information
-combined = combine_edges_foreground(edges, fg_prob, alpha=0.7)  # Adjust alpha as needed
-
-# Apply Thresholding to refine the result further
-refined_mask = threshold_and_refine(combined, threshold=0.5)
-
-# Compute Scores
-foreground_score, edge_weighted_score = compute_probability_scores(fg_prob, edges)
-
-# Display Results
+# Display results using matplotlib
 fig, ax = plt.subplots(1, 3, figsize=(15, 5))
-ax[0].imshow(edges, cmap='gray')
-ax[0].set_title("Multi-Scale Canny Edges")
+ax[0].imshow(fg_prob, cmap='jet')
+ax[0].set_title("GrabCut Foreground Probability")
 
-ax[1].imshow(fg_prob, cmap='jet')
-ax[1].set_title("GrabCut Foreground Probability")
+ax[1].imshow(edges_refined, cmap='gray')
+ax[1].set_title("Canny Edge Detection")
 
-ax[2].imshow(refined_mask, cmap='gray')
-ax[2].set_title("Final Refined Segmentation")
+ax[2].imshow(fg_prob * edges_refined, cmap='jet')
+ax[2].set_title("Combined Foreground Probability and Edges")
 
 plt.show()
 
-# Print Probability Scores
+# Print out the scores
 print(f"Foreground Probability Score: {foreground_score:.4f}")
-print(f"Edge-Weighted Foreground Score: {edge_weighted_score:.4f}")
+print(f"Background Probability Score: {background_score:.4f}")
+print(f"Edge-Weighted Foreground Score: {edge_weighted_fg:.4f}")
