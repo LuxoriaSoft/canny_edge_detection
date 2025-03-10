@@ -8,7 +8,15 @@
 using namespace cv;
 using namespace std;
 
-// Function to apply multi-scale Canny edge detection
+/**
+ * This function applies multi-scale Canny edge detection to an input image.
+ * It returns the refined edges after morphological closing.
+ * The function takes an input image and a list of sigma values for Gaussian smoothing.
+ * The default sigma values are {1.0, 2.0, 3.0}.
+ * @param image: Input image (grayscale)
+ * @param sigma_list: List of sigma values for Gaussian smoothing
+ * @return edges_refined: Refined edges after morphological closing
+ */
 Mat multi_scale_canny(const Mat& image, const vector<double>& sigma_list = {1.0, 2.0, 3.0}) {
     Mat edges_combined = Mat::zeros(image.size(), CV_8U);
 
@@ -27,7 +35,12 @@ Mat multi_scale_canny(const Mat& image, const vector<double>& sigma_list = {1.0,
     return edges_refined;
 }
 
-// Function to apply GrabCut segmentation
+/**
+ * This function applies GrabCut algorithm to an input image and returns the foreground mask.
+ * The function takes an input image and returns a binary mask where 1 represents the foreground.
+ * @param image: Input image (BGR)
+ * @return fg_mask: Foreground mask (binary)
+ */
 Mat grabcut_foreground(const Mat& image) {
     Mat mask = Mat::zeros(image.size(), CV_8UC1);
 
@@ -49,7 +62,15 @@ Mat grabcut_foreground(const Mat& image) {
     return fg_mask;
 }
 
-// Function to compute foreground and background probabilities
+/**
+ * This function computes the foreground and background probabilities based on the input image and refined edges.
+ * The function returns the foreground probability, foreground score, background score, and edge-weighted foreground score.
+ * @param image_rgb: Input image (BGR)
+ * @param edges_refined: Refined edges (binary)
+ * @return fg_prob: Foreground probability (floating point)
+ * @return foreground_score: Foreground probability score (mean)
+ * @return background_score: Background probability score (complement of foreground)
+ */
 tuple<Mat, double, double, double> compute_foreground_background_probability(const Mat& image_rgb, const Mat& edges_refined) {
     Mat fg_prob = grabcut_foreground(image_rgb); // Get foreground probability
 
@@ -79,6 +100,15 @@ tuple<Mat, double, double, double> compute_foreground_background_probability(con
     return make_tuple(fg_prob, foreground_score, background_score, edge_weighted_fg);
 }
 
+/**
+ * Main function to demonstrate GrabCut with edge detection.
+ * The function loads an input image, applies multi-scale Canny edge detection, and computes foreground probabilities.
+ * The function displays the foreground probability, refined edges, and the scores.
+ * @param ac: Argument count
+ * @param av: Argument values
+ * @return 0 if successful
+ * @return -1 if input image is not provided
+ */
 int main(int ac, char** av) {
     // Check if the input image is provided (if input size is not 2, return -1 and show usage message)
     if (ac != 2) {
