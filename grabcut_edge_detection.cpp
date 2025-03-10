@@ -1,3 +1,47 @@
+/**
+ * GrabCut with Multi-Scale Canny Edge Detection:
+ *
+ * This program integrates the GrabCut algorithm with multi-scale Canny edge detection
+ * to segment the foreground from the background in an image. The primary goal is to compute foreground
+ * and background probabilities and visualize the results.
+ *
+ * Key Components and Workflow:
+ *
+ * 1. Multi-Scale Canny Edge Detection:
+ *    - The program applies Canny edge detection at multiple scales (using different Gaussian smoothing
+ *      levels) to detect edges in the input image.
+ *    - The edges detected at different scales are combined and refined using morphological operations
+ *      to close small gaps.
+ *    - Algorithm: Canny edge detection with Gaussian smoothing and morphological closing.
+ *
+ * 2. GrabCut Segmentation:
+ *    - The GrabCut algorithm is used to segment the foreground from the background in the image.
+ *    - A bounding box is defined to initialize the segmentation process, and the algorithm iteratively
+ *      refines the segmentation based on color statistics.
+ *    - Algorithm: GrabCut for foreground-background segmentation.
+ *
+ * 3. Foreground and Background Probability Computation:
+ *    - The foreground probability is computed from the GrabCut segmentation result.
+ *    - The program calculates the mean foreground probability and an edge-weighted foreground score,
+ *      which considers the overlap between the foreground and the detected edges.
+ *    - Algorithm: Mean calculation and edge-weighted scoring.
+ *
+ * 4. Implementation:
+ *    - The program is implemented using OpenCV, a popular computer vision library.
+ *    - It reads an input image, processes it to detect edges and segment the foreground, and then
+ *      computes various scores to quantify the segmentation quality.
+ *    - The results are displayed using OpenCV's visualization functions.
+ *
+ * 5. Output:
+ *    - The program outputs the foreground probability score, background probability score, and
+ *      edge-weighted foreground score.
+ *    - It also displays the foreground probability map and the refined edges for visual inspection.
+ *
+ * Usage:
+ * - The program is executed from the command line with the path to an input image as an argument.
+ * - Example: ./grabcut_edge_detection <image_path>
+ */
+
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
