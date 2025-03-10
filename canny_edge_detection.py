@@ -15,7 +15,7 @@ def grabcut_foreground(image):
     bgd_model = np.zeros((1, 65), np.float64)
     fgd_model = np.zeros((1, 65), np.float64)
     
-    # Define a bounding box (change as per your requirement)
+    # Define a bounding box of the object (x, y, width, height)
     rect = (50, 50, image.shape[1]-100, image.shape[0]-100)  # (x, y, width, height)
     
     # Run GrabCut
@@ -43,17 +43,17 @@ def multi_scale_canny(image, sigma_list=[1.0, 2.0, 3.0]):
 def compute_foreground_background_probability(image_rgb, edges_refined):
     fg_prob = grabcut_foreground(image_rgb)  # Extract foreground probability map
 
-    # Calculate the foreground score (mean of foreground probability)
+    # Calculate the foreground score - mean of foreground probability
     foreground_score = np.mean(fg_prob)
     background_score = 1 - foreground_score  # Background is the complement
     
-    # Calculate the edge-weighted foreground score (based on refined edges)
+    # Calculate the edge-weighted foreground score
     edge_weighted_fg = np.sum(fg_prob * (edges_refined / 255)) / np.sum(edges_refined / 255) if np.sum(edges_refined) > 0 else 0
     
     return fg_prob, foreground_score, background_score, edge_weighted_fg
 
 # Load and preprocess the image
-image = cv2.imread("image2.jpg")  # Load your image here (replace with your file path)
+image = cv2.imread("image2.jpg")
 image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # Convert to RGB for correct display
 gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) / 255.0  # Normalize to [0,1]
 
@@ -76,7 +76,6 @@ ax[2].set_title("Combined Foreground Probability and Edges")
 
 plt.show()
 
-# Print out the scores
 print(f"Foreground Probability Score: {foreground_score:.4f}")
 print(f"Background Probability Score: {background_score:.4f}")
 print(f"Edge-Weighted Foreground Score: {edge_weighted_fg:.4f}")
