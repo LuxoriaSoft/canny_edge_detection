@@ -23,16 +23,17 @@ jobs:
         uses: microsoft/setup-msbuild@v2
 
       - uses: lukka/get-cmake@latest
-
-      - name: Build and Install Dependencies with vcpkg
-        uses: johnwason/vcpkg-action@v6
-        with:
-          pkgs: opencv4[contrib,quality]
-          triplet: ${{ matrix.arch }}-windows-static
-          revision: '57c08a3223a1ec03c3a31986ee38d32e90b6039c'
-          cache-key: vcpkg-25-${{ matrix.arch }}-${{ matrix.os }}
-          token: ${{ github.token }}
-          github-binarycache: true
+      
+      - name: Install vcpkg from source
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
+          cd C:\vcpkg
+          git checkout 57c08a3223a1ec03c3a31986ee38d32e90b6039c
+          .\bootstrap-vcpkg.bat
+      
+      - name: Install vcpkg packages
+        run: |
+          C:\vcpkg\vcpkg install opencv4[contrib,quality]:${{ matrix.arch }}-windows-static
     
       - name: Debug vcpkg root
         shell: pwsh
