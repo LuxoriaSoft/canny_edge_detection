@@ -2,11 +2,14 @@
     "name": "grabcut",
     "version": "1.0.0",
     "dependencies": [
-      "opencv"
+      {
+        "name": "opencv4",
+        "features": [
+          "contrib",
+          "quality"
+        ]
+      }
     ],
-    "overrides": [
-      { "name": "opencv", "version": "4.10.0" }
-    ],
-    "builtin-baseline":"b322364f06308bdd24823f9d8f03fe0cc86fd46f"
+    "builtin-baseline":"57c08a3223a1ec03c3a31986ee38d32e90b6039c"
   }
   
