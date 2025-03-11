@@ -26,6 +26,8 @@ jobs:
 
       - name: Build and Install Dependencies with vcpkg
         uses: johnwason/vcpkg-action@v6
+        env:
+          ARCH: ${{ matrix.arch }}
         with:
           pkgs: opencv4
           triplet: ${{ matrix.arch }}-windows-static
