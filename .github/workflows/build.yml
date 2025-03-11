@@ -29,7 +29,7 @@ jobs:
         with:
           manifest-dir: ${{ github.workspace }}
           triplet: ${{ matrix.arch }}-windows-static
-          revision: 'b322364f06308bdd24823f9d8f03fe0cc86fd46f'
+          revision: '3426db05b996481ca31e95fff3734cf23e0f51bc'
           cache-key: vcpkg-25-${{ matrix.arch }}-${{ matrix.os }}
           token: ${{ github.token }}
           github-binarycache: true
