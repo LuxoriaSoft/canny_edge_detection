@@ -1,6 +1,9 @@
 {
     "name": "grabcut",
     "version": "1.0.0",
+    "dependencies": [
+      "opencv"
+    ],
     "overrides": [
       { "name": "opencv", "version": "4.10.0" }
     ],
