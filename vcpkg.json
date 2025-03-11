@@ -2,7 +2,7 @@
     "name": "project",
     "version": "1.0.0",
     "dependencies": [
-      { "name": "opencv4", "version>=": "4.10.0#2" }
+      { "name": "opencv", "version>=": "4.10.0" }
     ],
     "builtin-baseline":"3426db05b996481ca31e95fff3734cf23e0f51bc"
   }
