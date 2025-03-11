@@ -36,7 +36,7 @@ jobs:
       
       - name: Install vcpkg packages
         run: |
-          C:\vcpkg\vcpkg install opencv4[contrib,quality]:${{ matrix.arch }}-windows-static
+          C:\vcpkg\vcpkg install
     
       - name: Debug vcpkg root
         shell: pwsh
