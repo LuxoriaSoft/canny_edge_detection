@@ -27,10 +27,10 @@ jobs:
       - name: Build and Install Dependencies with vcpkg
         uses: johnwason/vcpkg-action@v6
         with:
-          pkgs: opencv4@4.9.0
+          pkgs: opencv4
           triplet: ${{ matrix.arch }}-windows-static
+          revision: 'b322364f06308bdd24823f9d8f03fe0cc86fd46f'
           cache-key: vcpkg-25-${{ matrix.arch }}-${{ matrix.os }}
-          revision: master
           token: ${{ github.token }}
           github-binarycache: true
     
