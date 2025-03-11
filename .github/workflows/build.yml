@@ -28,7 +28,7 @@ jobs:
         uses: johnwason/vcpkg-action@v6
         id: vcpkg
         with:
-          pkgs: opencv4
+          pkgs: opencv4[contrib]
           triplet: ${{ matrix.arch }}-windows-static
           cache-key: vcpkg-${{ matrix.arch }}-${{ matrix.os }}
           revision: master
