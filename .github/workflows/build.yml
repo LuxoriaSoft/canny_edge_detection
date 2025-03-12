@@ -13,7 +13,7 @@ jobs:
         os: ["windows-2022"]
         arch: ["x86", "x64", "arm64"]
 
-    runs-on: windows-2022
+    runs-on: windows-2019
 
     steps:
       - name: Checkout
