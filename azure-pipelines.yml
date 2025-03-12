@@ -1,0 +1,66 @@
+trigger:
+- main
+
+pr:
+  branches:
+    include:
+      - '*'
+
+jobs:
+- job: Build_GrabCut
+  displayName: 'Build GrabCut Image Segmentation'
+  strategy:
+    matrix:
+      x86:
+        arch: 'x86'
+        vc_arch: 'Win32'
+        vcpkg_triplet: 'x86-windows-static'
+      x64:
+        arch: 'x64'
+        vc_arch: 'x64'
+        vcpkg_triplet: 'x64-windows-static'
+      arm64:
+        arch: 'arm64'
+        vc_arch: 'ARM64'
+        vcpkg_triplet: 'arm64-windows-static'
+
+  pool:
+    vmImage: 'windows-latest'
+
+  steps:
+  - checkout: self
+
+  - task: CMake@1
+    displayName: 'Install CMake'
+    inputs:
+      cmakeVersion: 'latest'
+
+  - script: |
+      git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
+      cd C:\vcpkg
+      git checkout 57c08a3223a1ec03c3a31986ee38d32e90b6039c
+      .\bootstrap-vcpkg.bat
+    displayName: 'Install vcpkg'
+
+  - script: |
+      C:\vcpkg\vcpkg install --triplet $(vcpkg_triplet)
+    displayName: 'Install vcpkg packages'
+
+  - script: |
+      mkdir build
+      cd build
+      cmake .. -G "Visual Studio 17 2022" -A $(vc_arch) -DCMAKE_BUILD_TYPE=Release ^
+        -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake" ^
+        -DVCPKG_TARGET_TRIPLET=$(vcpkg_triplet)
+    displayName: 'Configure CMake'
+
+  - script: |
+      cd build
+      cmake --build . --config Release -- /p:Platform=$(vc_arch)
+    displayName: 'Build Project'
+
+  - task: PublishBuildArtifacts@1
+    displayName: 'Upload Build Artifact'
+    inputs:
+      pathToPublish: 'build/Release'
+      artifactName: 'opencv-$(arch)'
