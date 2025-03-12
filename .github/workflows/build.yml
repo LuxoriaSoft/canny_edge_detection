@@ -24,29 +24,9 @@ jobs:
 
       - uses: lukka/get-cmake@latest
       
-      #- name: Install vcpkg from source
-      #  run: |
-      #    if (Test-Path -Path "C:\vcpkg") {
-      #      Remove-Item -Recurse -Force "C:\vcpkg"
-      #    }
-      #    git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
-      #    cd C:\vcpkg
-      #    git checkout 57c08a3223a1ec03c3a31986ee38d32e90b6039c
-      #    .\bootstrap-vcpkg.bat
-      
       - name: Install vcpkg packages
         run: |
           C:\vcpkg\vcpkg install --triplet ${{ matrix.arch }}-windows-static
-    
-      - name: Debug vcpkg root
-        shell: pwsh
-        run: |
-          Write-Host "Using static vcpkg root: D:/a/grabcut_image_segementation/grabcut_image_segementation/vcpkg"
-      
-      - name: Debug vcpkg installation
-        shell: pwsh
-        run: |
-          Get-ChildItem -Path "D:/a/grabcut_image_segementation/grabcut_image_segementation/vcpkg/installed" -Recurse
       
       - name: Configure Project with CMake
         shell: pwsh
@@ -54,12 +34,12 @@ jobs:
           mkdir build
           cd build
           if ("${{ matrix.arch }}" -eq "x86") {
-            cmake .. -G "Visual Studio 17 2022" -A Win32 -DCMAKE_BUILD_TYPE=Release `
-              -DCMAKE_TOOLCHAIN_FILE="D:/a/grabcut_image_segementation/grabcut_image_segementation/vcpkg/scripts/buildsystems/vcpkg.cmake" `
+            cmake .. -G "Visual Studio 17 2019" -A Win32 -DCMAKE_BUILD_TYPE=Release `
+              -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake" `
               -DVCPKG_TARGET_TRIPLET=x86-windows-static
           } else {
-            cmake .. -G "Visual Studio 17 2022" -A ${{ matrix.arch }} -DCMAKE_BUILD_TYPE=Release `
-              -DCMAKE_TOOLCHAIN_FILE="D:/a/grabcut_image_segementation/grabcut_image_segementation/vcpkg/scripts/buildsystems/vcpkg.cmake" `
+            cmake .. -G "Visual Studio 17 2019" -A ${{ matrix.arch }} -DCMAKE_BUILD_TYPE=Release `
+              -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake" `
               -DVCPKG_TARGET_TRIPLET=${{ matrix.arch }}-windows-static
           }
       
