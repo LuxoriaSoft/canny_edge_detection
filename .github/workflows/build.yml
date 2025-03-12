@@ -24,15 +24,15 @@ jobs:
 
       - uses: lukka/get-cmake@latest
       
-      - name: Install vcpkg from source
-        run: |
-          if (Test-Path -Path "C:\vcpkg") {
-            Remove-Item -Recurse -Force "C:\vcpkg"
-          }
-          git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
-          cd C:\vcpkg
-          git checkout 57c08a3223a1ec03c3a31986ee38d32e90b6039c
-          .\bootstrap-vcpkg.bat
+      #- name: Install vcpkg from source
+      #  run: |
+      #    if (Test-Path -Path "C:\vcpkg") {
+      #      Remove-Item -Recurse -Force "C:\vcpkg"
+      #    }
+      #    git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
+      #    cd C:\vcpkg
+      #    git checkout 57c08a3223a1ec03c3a31986ee38d32e90b6039c
+      #    .\bootstrap-vcpkg.bat
       
       - name: Install vcpkg packages
         run: |
