@@ -7,6 +7,7 @@ pool:
 steps:
 - checkout: self
 
+# Install necessary dependencies
 - task: CMake@1
   displayName: 'Install CMake'
   inputs:
@@ -19,10 +20,20 @@ steps:
     .\bootstrap-vcpkg.bat
   displayName: 'Install vcpkg'
 
+# Install ARM64 dependencies with vcpkg
 - script: |
     C:\vcpkg\vcpkg install --triplet arm64-windows-static
   displayName: 'Install vcpkg packages for ARM64'
 
+# Find correct MSBuild path for ARM64
+- script: |
+    $vsPath = & "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -requires Microsoft.VisualStudio.Component.VC.Tools.arm64 -property installationPath
+    echo "VS Path: $vsPath"
+    echo "##vso[task.setvariable variable=VSINSTALLDIR]$vsPath"
+  displayName: 'Locate Visual Studio with ARM64 support'
+  condition: succeeded()
+
+# Configure CMake for ARM64
 - script: |
     mkdir build
     cd build
@@ -31,11 +42,13 @@ steps:
       -DVCPKG_TARGET_TRIPLET=arm64-windows-static
   displayName: 'Configure CMake for ARM64'
 
+# Build project for ARM64
 - script: |
     cd build
     cmake --build . --config Release -- /p:Platform=ARM64
   displayName: 'Build Project for ARM64'
 
+# Upload the built binaries
 - task: PublishBuildArtifacts@1
   displayName: 'Upload Build Artifact (ARM64)'
   inputs:
