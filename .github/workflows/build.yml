@@ -52,6 +52,6 @@ jobs:
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: opencv-${{ matrix.arch }}
-          path: build/Release
+          name: grabcut-detection-${{ matrix.arch }}
+          path: D:\a\grabcut_image_segementation\grabcut_image_segementation\build\bin\Release\
       
