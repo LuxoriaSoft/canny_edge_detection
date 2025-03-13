@@ -43,9 +43,6 @@
  */
 
 #include <opencv2/opencv.hpp>
-#include <opencv2/imgproc.hpp>
-#include <opencv2/highgui.hpp>
-#include <opencv2/objdetect.hpp>
 #include <iostream>
 #include <tuple>
 #include <vector>
@@ -182,14 +179,10 @@ int main(int ac, char** av) {
     double foreground_score, background_score, edge_weighted_fg;
     std::tie(fg_prob, foreground_score, background_score, edge_weighted_fg) = compute_foreground_background_probability(image, edges_refined);
 
-    // Print out the probabilities (scores)
+    // Print out the probabilities (scores gapped to 1)
     std::cout << "Foreground Probability Score: " << foreground_score << std::endl;
     std::cout << "Background Probability Score: " << background_score << std::endl;
     std::cout << "Edge-Weighted Foreground Score: " << edge_weighted_fg << std::endl;
-
-    cv::imshow("Foreground Probability", fg_prob);
-    cv::imshow("Refined Edges", edges_refined);
-    cv::waitKey(0);  // Wait for a key press to close the window
 
     return 0;
 }
