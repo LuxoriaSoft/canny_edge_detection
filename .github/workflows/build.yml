@@ -56,4 +56,7 @@ jobs:
         with:
           name: grabcut-detection-${{ matrix.arch }}
           path: D:\a\grabcut_image_segementation\grabcut_image_segementation\build\bin\Release\
-      
+
+# DOCS :
+# Add additional flags to the CMAKE_CXX_FLAGS variable to enable or disable specific features.
+# https://stackoverflow.com/questions/13007926/opencv-grabcut-cpp-error
