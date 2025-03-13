@@ -6,6 +6,12 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Set the build type to Release
+set(CMAKE_BUILD_TYPE Release)
+
+# Add the NDEBUG flag for Release builds
+add_definitions(-DNDEBUG)
+
 # Handle OpenCV on different platforms
 if(DEFINED ENV{VCPKG_INSTALLED_DIR})
     # If vcpkg is used, point to the vcpkg OpenCV directory
