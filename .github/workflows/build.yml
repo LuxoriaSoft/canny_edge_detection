@@ -32,7 +32,7 @@ jobs:
       - name: Configure OpenCV with CMake for Static Library
         shell: pwsh
         run: |
-          cd opencv
+          cd opencv/opencv-4.11.0
           mkdir build
           cd build
           cmake .. -G "Visual Studio 16 2019" -A ${{ matrix.arch }} `
