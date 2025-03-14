@@ -61,7 +61,11 @@ jobs:
           cd opencv/opencv-4.11.0/build
           
           # Build the project for the given architecture
-          cmake --build . --config Release -- /p:Platform=${{ matrix.arch }} -- /p:Configuration=Release
+          if ("${{ matrix.arch }}" -eq "x86") {
+            cmake --build . --config Release -- /p:Platform=Win32 -- /p:Configuration=Release
+          } else {
+            cmake --build . --config Release -- /p:Platform=${{ matrix.arch }} -- /p:Configuration=Release
+          }
       
       - name: Configure Project with CMake
         shell: pwsh
