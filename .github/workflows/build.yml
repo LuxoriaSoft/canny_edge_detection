@@ -52,7 +52,7 @@ jobs:
               -DCMAKE_BUILD_TYPE=Release `
               -DBUILD_SHARED_LIBS=OFF `
               -DCMAKE_INSTALL_PREFIX=D:/opencv-install `
-              -DCMAKE_CXX_FLAGS="/DNDEBUG /D__SSE2__=0 /D__AVX__=0"
+              -DCMAKE_CXX_FLAGS="/DNDEBUG /D__SSE2__=0 /D__AVX__=0 /DWITH_SSE=OFF /DWITH_AVX=OFF"
           }
       
       - name: Build OpenCV Static Library
