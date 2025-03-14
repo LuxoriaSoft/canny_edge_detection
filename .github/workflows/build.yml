@@ -29,31 +29,31 @@ jobs:
           Invoke-WebRequest -Uri "https://github.com/opencv/opencv/archive/refs/tags/4.11.0.zip" -OutFile "opencv-4.11.0.zip"
           Expand-Archive -Path "opencv-4.11.0.zip" -DestinationPath "opencv"
     
-          - name: Configure OpenCV with CMake for Static Library
-          shell: pwsh
-          run: |
-            # Navigate to the extracted OpenCV source folder
-            cd opencv/opencv-4.11.0
-            
-            # Create build directory
-            mkdir build
-            cd build
-  
-            # CMake Configuration for Static Library
-            if (${{ matrix.arch }} -eq 'x86') {
-              # For x86, specify Win32 platform explicitly
-              cmake .. -G "Visual Studio 16 2019" -A Win32 `
-                -DCMAKE_BUILD_TYPE=Release `
-                -DBUILD_SHARED_LIBS=OFF `
-                -DCMAKE_INSTALL_PREFIX=D:/opencv-install `
-                -DCMAKE_CXX_FLAGS="/DNDEBUG"
-            } else {
-              cmake .. -G "Visual Studio 16 2019" -A ${{ matrix.arch }} `
-                -DCMAKE_BUILD_TYPE=Release `
-                -DBUILD_SHARED_LIBS=OFF `
-                -DCMAKE_INSTALL_PREFIX=D:/opencv-install `
-                -DCMAKE_CXX_FLAGS="/DNDEBUG"
-            }
+      - name: Configure OpenCV with CMake for Static Library
+        shell: pwsh
+        run: |
+          # Navigate to the extracted OpenCV source folder
+          cd opencv/opencv-4.11.0
+          
+          # Create build directory
+          mkdir build
+          cd build
+
+          # CMake Configuration for Static Library
+          if (${{ matrix.arch }} -eq 'x86') {
+            # For x86, specify Win32 platform explicitly
+            cmake .. -G "Visual Studio 16 2019" -A Win32 `
+              -DCMAKE_BUILD_TYPE=Release `
+              -DBUILD_SHARED_LIBS=OFF `
+              -DCMAKE_INSTALL_PREFIX=D:/opencv-install `
+              -DCMAKE_CXX_FLAGS="/DNDEBUG"
+          } else {
+            cmake .. -G "Visual Studio 16 2019" -A ${{ matrix.arch }} `
+              -DCMAKE_BUILD_TYPE=Release `
+              -DBUILD_SHARED_LIBS=OFF `
+              -DCMAKE_INSTALL_PREFIX=D:/opencv-install `
+              -DCMAKE_CXX_FLAGS="/DNDEBUG"
+          }
       
       - name: Configure Project with CMake
         shell: pwsh
