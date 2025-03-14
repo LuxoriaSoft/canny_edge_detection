@@ -46,13 +46,31 @@ jobs:
               -DCMAKE_BUILD_TYPE=Release `
               -DBUILD_SHARED_LIBS=OFF `
               -DCMAKE_INSTALL_PREFIX=D:/opencv-install `
-              -DCMAKE_CXX_FLAGS="/DNDEBUG"
+              -DCMAKE_CXX_FLAGS="/DNDEBUG" `
+              -DWITH_ITT=OFF `
+              -DWITH_OPENCL=OFF `
+              -DWITH_OPENCLAMDBLAS=OFF `
+              -DWITH_OPENCLAMDFFT=OFF `
+              -DWITH_OPENCL_D3D11_NV=OFF `
+              -DWITH_DIRECTML=OFF `
+              -DWITH_DIRECTX=OFF `
+              -DWITH_ADE=OFF `
+              -DWITH_CAROTENE=OFF
           } else {
             cmake .. -G "Visual Studio 16 2019" -A ${{ matrix.arch }} `
               -DCMAKE_BUILD_TYPE=Release `
               -DBUILD_SHARED_LIBS=OFF `
               -DCMAKE_INSTALL_PREFIX=D:/opencv-install `
-              -DCMAKE_CXX_FLAGS="/DNDEBUG /D__SSE2__=0 /D__AVX__=0 /DWITH_SSE=OFF /DWITH_AVX=OFF"
+              -DCMAKE_CXX_FLAGS="/DNDEBUG /D__SSE2__=0 /D__AVX__=0 /DWITH_SSE=OFF /DWITH_AVX=OFF" `
+              -DWITH_ITT=OFF `
+              -DWITH_OPENCL=OFF `
+              -DWITH_OPENCLAMDBLAS=OFF `
+              -DWITH_OPENCLAMDFFT=OFF `
+              -DWITH_OPENCL_D3D11_NV=OFF `
+              -DWITH_DIRECTML=OFF `
+              -DWITH_DIRECTX=OFF `
+              -DWITH_ADE=OFF `
+              -DWITH_CAROTENE=OFF
           }
       
       - name: Build OpenCV Static Library
