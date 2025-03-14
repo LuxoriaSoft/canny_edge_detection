@@ -34,7 +34,7 @@ jobs:
             cd C:/vcpkg
 
             # Create the patch content as a PowerShell here-string
-            $patchContent = @'
+            $patchContent = @"
 --- ports/opencv4/portfile.cmake
 +++ ports/opencv4/portfile.cmake
 @@ -112,6 +112,8 @@
@@ -44,7 +44,7 @@ jobs:
 
 +    set(OPENCV_DISABLE_ASSERTS ON CACHE BOOL "Disable OpenCV asserts")
 +    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /DNDEBUG")
-'@
+"@
 
             # Write the patch content to a patch file
             $patchContent | Out-File "C:/vcpkg/patch.patch" -Encoding utf8
