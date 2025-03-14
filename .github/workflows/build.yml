@@ -76,12 +76,12 @@ jobs:
             cmake .. -G "Visual Studio 16 2019" -A Win32 -DCMAKE_BUILD_TYPE=Release `
               -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake" `
               -DVCPKG_TARGET_TRIPLET=x86-windows-static `
-              -DCMAKE_CXX_FLAGS="/DNDEBUG"
+              -DCMAKE_CXX_FLAGS="/DNDEBUG /D__SSE2__=0 /D__AVX__=0"
           } else {
             cmake .. -G "Visual Studio 16 2019" -A ${{ matrix.arch }} -DCMAKE_BUILD_TYPE=Release `
               -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake" `
               -DVCPKG_TARGET_TRIPLET=${{ matrix.arch }}-windows-static `
-              -DCMAKE_CXX_FLAGS="/DNDEBUG"
+              -DCMAKE_CXX_FLAGS="/DNDEBUG /D__SSE2__=0 /D__AVX__=0"
           }
       
       - name: Build Project with CMake
