@@ -35,10 +35,11 @@ jobs:
         run: |
           # Navigate to the extracted OpenCV source folder
           cd opencv
+          
           # Create build directory
           mkdir build
           cd build
-
+          
           # CMake Configuration for Static Library based on architecture
           if ("${{ matrix.arch }}" -eq 'x86') {
             # For x86, specify Win32 platform explicitly
@@ -46,7 +47,7 @@ jobs:
               -DCMAKE_BUILD_TYPE=Release `
               -DBUILD_SHARED_LIBS=OFF `
               -DCMAKE_INSTALL_PREFIX=D:/opencv-install `
-              -DCMAKE_CXX_FLAGS="/DNDEBUG /D__SSE2__=0 /D__AVX__=0" `
+              -DCMAKE_CXX_FLAGS="/DNDEBUG /D__SSE2__=1" `
               -DWITH_ITT=OFF `
               -DWITH_OPENCL=OFF `
               -DWITH_OPENCLAMDBLAS=OFF `
@@ -62,7 +63,7 @@ jobs:
               -DCMAKE_BUILD_TYPE=Release `
               -DBUILD_SHARED_LIBS=OFF `
               -DCMAKE_INSTALL_PREFIX=D:/opencv-install `
-              -DCMAKE_CXX_FLAGS="/DNDEBUG /D__SSE2__=0 /D__AVX__=0" `
+              -DCMAKE_CXX_FLAGS="/DNDEBUG /D__SSE2__=1" `
               -DWITH_ITT=OFF `
               -DWITH_OPENCL=OFF `
               -DWITH_OPENCLAMDBLAS=OFF `
@@ -78,7 +79,7 @@ jobs:
               -DCMAKE_BUILD_TYPE=Release `
               -DBUILD_SHARED_LIBS=OFF `
               -DCMAKE_INSTALL_PREFIX=D:/opencv-install `
-              -DCMAKE_CXX_FLAGS="/DNDEBUG /D__SSE2__=0 /D__AVX__=0" `
+              -DCMAKE_CXX_FLAGS="/DNDEBUG" `
               -DWITH_ITT=OFF `
               -DWITH_OPENCL=OFF `
               -DWITH_OPENCLAMDBLAS=OFF `
