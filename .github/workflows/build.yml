@@ -26,7 +26,7 @@ jobs:
       
       - name: Install vcpkg packages
         run: |
-          C:\vcpkg\vcpkg install --triplet ${{ matrix.arch }}-windows-static --cmake-args -DOPENCV_DISABLE_ASSERTS=ON -DCMAKE_CXX_FLAGS="/DNDEBUG"
+          C:\vcpkg\vcpkg install --triplet ${{ matrix.arch }}-windows-static
 
       - name: Configure Project with CMake
         shell: pwsh
