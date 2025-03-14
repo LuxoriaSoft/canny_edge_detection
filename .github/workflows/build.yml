@@ -26,42 +26,12 @@ jobs:
       
       - name: Install vcpkg packages
         run: |
-          # Check if vcpkg is already installed
-          if (Test-Path "C:/vcpkg") {
-            Write-Host "vcpkg is already installed, applying patch..."
+          # Set the architecture environment variable
+          $env:VCPKG_ARCH = ${{ matrix.arch }}
+          
+          # Run the PowerShell script to apply the patch and install the package
+          powershell -ExecutionPolicy Bypass -File ./scripts/apply-patch-and-install.ps1
 
-            # Apply patch to OpenCV to disable assertions
-            cd C:/vcpkg
-
-            # Create the patch content as a PowerShell here-string
-            $patchContent = @'
---- ports/opencv4/portfile.cmake
-+++ ports/opencv4/portfile.cmake
-@@ -112,6 +112,8 @@
-     if(VCPKG_BUILD_TYPE STREQUAL "release")
-         set(CMAKE_CXX_FLAGS_RELEASE "/DNDEBUG ${CMAKE_CXX_FLAGS_RELEASE}")
-     endif()
-
-+    set(OPENCV_DISABLE_ASSERTS ON CACHE BOOL "Disable OpenCV asserts")
-+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /DNDEBUG")
-'@
-
-            # Write the patch content to a patch file
-            $patchContent | Out-File "C:/vcpkg/patch.patch" -Encoding utf8
-
-            # Apply the patch using git
-            git apply C:/vcpkg/patch.patch
-
-            # Clean up the patch file (optional)
-            Remove-Item "C:/vcpkg/patch.patch"
-          } else {
-            Write-Host "vcpkg is not installed, skipping patch application."
-          }
-
-          # Install the necessary package
-          C:/vcpkg/vcpkg install --triplet ${{ matrix.arch }}-windows-static
-        shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
-      
       - name: Configure Project with CMake
         shell: pwsh
         run: |
