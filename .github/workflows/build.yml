@@ -40,7 +40,7 @@ jobs:
           cd build
 
           # CMake Configuration for Static Library
-          if (${{ matrix.arch }} -eq 'x86') {
+          if ("${{ matrix.arch }}" -eq 'x86') {
             # For x86, specify Win32 platform explicitly
             cmake .. -G "Visual Studio 16 2019" -A Win32 `
               -DCMAKE_BUILD_TYPE=Release `
