@@ -27,7 +27,7 @@ jobs:
       - name: Install vcpkg packages
         run: |
           # Set the architecture environment variable
-          $env:VCPKG_ARCH = ${{ matrix.arch }}
+          $env:VCPKG_ARCH = "${{ matrix.arch }}"
           
           # Run the PowerShell script to apply the patch and install the package
           powershell -ExecutionPolicy Bypass -File ./scripts/apply-patch-and-install.ps1
