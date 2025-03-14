@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "dependencies": [ 
       {
-        "name": "opencv4",
+        "name": "opencv3",
         "features": ["contrib"]
       }
     ]
