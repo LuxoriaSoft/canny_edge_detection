@@ -4,11 +4,7 @@
     "dependencies": [ 
       {
         "name": "opencv4",
-        "features": ["contrib"],
-        "build": [
-          "OPENCV_DISABLE_ASSERTS=ON",
-          "CMAKE_CXX_FLAGS=/DNDEBUG"
-        ]
+        "features": ["contrib"]
       }
     ]
   }
