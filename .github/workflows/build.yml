@@ -55,6 +55,14 @@ jobs:
               -DCMAKE_CXX_FLAGS="/DNDEBUG"
           }
       
+      - name: Build OpenCV Static Library
+        shell: pwsh
+        run: |
+          cd opencv/opencv-4.11.0/build
+          
+          # Build the project for the given architecture
+          cmake --build . --config Release -- /p:Platform=${{ matrix.arch }} -- /p:Configuration=Release
+      
       - name: Configure Project with CMake
         shell: pwsh
         run: |
