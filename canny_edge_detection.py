@@ -53,7 +53,7 @@ def compute_foreground_background_probability(image_rgb, edges_refined):
     return fg_prob, foreground_score, background_score, edge_weighted_fg
 
 # Load and preprocess the image
-image = cv2.imread("landscape_4k.jpg")
+image = cv2.imread("assets/image_copy.png")
 image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # Convert to RGB for correct display
 gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) / 255.0  # Normalize to [0,1]
 
