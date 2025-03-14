@@ -24,9 +24,21 @@ jobs:
 
       - uses: lukka/get-cmake@latest
       
-      - name: Install OpenCV
+      - name: Download OpenCV [4.11.0] source code
         run: |
-          choco install opencv -y
+          Invoke-WebRequest -Uri "https://github.com/opencv/opencv/archive/refs/tags/4.11.0.zip" -OutFile "opencv-4.11.0.zip"
+          Expand-Archive -Path "opencv-4.11.0.zip" -DestinationPath "opencv"
+    
+      - name: Configure OpenCV with CMake for Static Library
+        shell: pwsh
+        run: |
+          cd opencv
+          mkdir build
+          cd build
+          cmake .. -G "Visual Studio 16 2019" -A ${{ matrix.arch }} `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DBUILD_SHARED_LIBS=OFF `
+            -DCMAKE_INSTALL_PREFIX=D:/opencv-install
       
       - name: Configure Project with CMake
         shell: pwsh
