@@ -29,49 +29,66 @@ jobs:
           Invoke-WebRequest -Uri "https://github.com/opencv/opencv/archive/refs/tags/4.11.0.zip" -OutFile "opencv-4.11.0.zip"
           Expand-Archive -Path "opencv-4.11.0.zip" -DestinationPath "opencv"
     
-      - name: Configure OpenCV with CMake for Static Library
-        shell: pwsh
-        run: |
-          # Navigate to the extracted OpenCV source folder
-          cd opencv/opencv-4.11.0
-          
-          # Create build directory
-          mkdir build
-          cd build
-
-          # CMake Configuration for Static Library
-          if ("${{ matrix.arch }}" -eq 'x86') {
-            # For x86, specify Win32 platform explicitly
-            cmake .. -G "Visual Studio 17 2022" -A Win32 `
-              -DCMAKE_BUILD_TYPE=Release `
-              -DBUILD_SHARED_LIBS=OFF `
-              -DCMAKE_INSTALL_PREFIX=D:/opencv-install `
-              -DCMAKE_CXX_FLAGS="/DNDEBUG" `
-              -DWITH_ITT=OFF `
-              -DWITH_OPENCL=OFF `
-              -DWITH_OPENCLAMDBLAS=OFF `
-              -DWITH_OPENCLAMDFFT=OFF `
-              -DWITH_OPENCL_D3D11_NV=OFF `
-              -DWITH_DIRECTML=OFF `
-              -DWITH_DIRECTX=OFF `
-              -DWITH_ADE=OFF `
-              -DWITH_CAROTENE=OFF
-          } else {
-            cmake .. -G "Visual Studio 17 2022" -A ${{ matrix.arch }} `
-              -DCMAKE_BUILD_TYPE=Release `
-              -DBUILD_SHARED_LIBS=OFF `
-              -DCMAKE_INSTALL_PREFIX=D:/opencv-install `
-              -DCMAKE_CXX_FLAGS="/DNDEBUG /D__SSE2__=0 /D__AVX__=0 /DWITH_SSE=OFF /DWITH_AVX=OFF" `
-              -DWITH_ITT=OFF `
-              -DWITH_OPENCL=OFF `
-              -DWITH_OPENCLAMDBLAS=OFF `
-              -DWITH_OPENCLAMDFFT=OFF `
-              -DWITH_OPENCL_D3D11_NV=OFF `
-              -DWITH_DIRECTML=OFF `
-              -DWITH_DIRECTX=OFF `
-              -DWITH_ADE=OFF `
-              -DWITH_CAROTENE=OFF
-          }
+          - name: Configure OpenCV with CMake for Static Library
+          shell: pwsh
+          run: |
+            # Navigate to the extracted OpenCV source folder
+            cd opencv/opencv-4.11.0
+            
+            # Create build directory
+            mkdir build
+            cd build
+  
+            # CMake Configuration for Static Library based on architecture
+            if ("${{ matrix.arch }}" -eq 'x86') {
+              # For x86, specify Win32 platform explicitly
+              cmake .. -G "Visual Studio 17 2022" -A Win32 `
+                -DCMAKE_BUILD_TYPE=Release `
+                -DBUILD_SHARED_LIBS=OFF `
+                -DCMAKE_INSTALL_PREFIX=D:/opencv-install `
+                -DCMAKE_CXX_FLAGS="/DNDEBUG /D__SSE2__=0 /D__AVX__=0" `
+                -DWITH_ITT=OFF `
+                -DWITH_OPENCL=OFF `
+                -DWITH_OPENCLAMDBLAS=OFF `
+                -DWITH_OPENCLAMDFFT=OFF `
+                -DWITH_OPENCL_D3D11_NV=OFF `
+                -DWITH_DIRECTML=OFF `
+                -DWITH_DIRECTX=OFF `
+                -DWITH_ADE=OFF `
+                -DWITH_CAROTENE=OFF
+            } elseif ("${{ matrix.arch }}" -eq 'x64') {
+              # For x64 architecture
+              cmake .. -G "Visual Studio 17 2022" -A x64 `
+                -DCMAKE_BUILD_TYPE=Release `
+                -DBUILD_SHARED_LIBS=OFF `
+                -DCMAKE_INSTALL_PREFIX=D:/opencv-install `
+                -DCMAKE_CXX_FLAGS="/DNDEBUG /D__SSE2__=0 /D__AVX__=0" `
+                -DWITH_ITT=OFF `
+                -DWITH_OPENCL=OFF `
+                -DWITH_OPENCLAMDBLAS=OFF `
+                -DWITH_OPENCLAMDFFT=OFF `
+                -DWITH_OPENCL_D3D11_NV=OFF `
+                -DWITH_DIRECTML=OFF `
+                -DWITH_DIRECTX=OFF `
+                -DWITH_ADE=OFF `
+                -DWITH_CAROTENE=OFF
+            } else {
+              # For ARM64 architecture
+              cmake .. -G "Visual Studio 17 2022" -A arm64 `
+                -DCMAKE_BUILD_TYPE=Release `
+                -DBUILD_SHARED_LIBS=OFF `
+                -DCMAKE_INSTALL_PREFIX=D:/opencv-install `
+                -DCMAKE_CXX_FLAGS="/DNDEBUG /D__SSE2__=0 /D__AVX__=0" `
+                -DWITH_ITT=OFF `
+                -DWITH_OPENCL=OFF `
+                -DWITH_OPENCLAMDBLAS=OFF `
+                -DWITH_OPENCLAMDFFT=OFF `
+                -DWITH_OPENCL_D3D11_NV=OFF `
+                -DWITH_DIRECTML=OFF `
+                -DWITH_DIRECTX=OFF `
+                -DWITH_ADE=OFF `
+                -DWITH_CAROTENE=OFF
+            }
       
       - name: Build OpenCV Static Library
         shell: pwsh
@@ -117,3 +134,6 @@ jobs:
 # DOCS :
 # Add additional flags to the CMAKE_CXX_FLAGS variable to enable or disable specific features.
 # https://stackoverflow.com/questions/13007926/opencv-grabcut-cpp-error
+
+# Compilation on ARM64
+# https://learn.arm.com/learning-paths/laptops-and-desktops/win-opencv/2-1-build-msvc/
