@@ -32,25 +32,36 @@ jobs:
 
             # Apply patch to OpenCV to disable assertions
             cd C:/vcpkg
-            git apply << 'EOF'
-            --- ports/opencv4/portfile.cmake
-            +++ ports/opencv4/portfile.cmake
-            @@ -112,6 +112,8 @@
-                 if(VCPKG_BUILD_TYPE STREQUAL "release")
-                     set(CMAKE_CXX_FLAGS_RELEASE "/DNDEBUG ${CMAKE_CXX_FLAGS_RELEASE}")
-                 endif()
 
-            +    set(OPENCV_DISABLE_ASSERTS ON CACHE BOOL "Disable OpenCV asserts")
-            +    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /DNDEBUG")
-            EOF
+            # Create the patch content as a PowerShell here-string
+            $patchContent = @'
+--- ports/opencv4/portfile.cmake
++++ ports/opencv4/portfile.cmake
+@@ -112,6 +112,8 @@
+     if(VCPKG_BUILD_TYPE STREQUAL "release")
+         set(CMAKE_CXX_FLAGS_RELEASE "/DNDEBUG ${CMAKE_CXX_FLAGS_RELEASE}")
+     endif()
+
++    set(OPENCV_DISABLE_ASSERTS ON CACHE BOOL "Disable OpenCV asserts")
++    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /DNDEBUG")
+'@
+
+            # Write the patch content to a patch file
+            $patchContent | Out-File "C:/vcpkg/patch.patch" -Encoding utf8
+
+            # Apply the patch using git
+            git apply C:/vcpkg/patch.patch
+
+            # Clean up the patch file (optional)
+            Remove-Item "C:/vcpkg/patch.patch"
           } else {
             Write-Host "vcpkg is not installed, skipping patch application."
           }
 
           # Install the necessary package
           C:/vcpkg/vcpkg install --triplet ${{ matrix.arch }}-windows-static
-
-
+        shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+      
       - name: Configure Project with CMake
         shell: pwsh
         run: |
