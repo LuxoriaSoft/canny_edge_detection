@@ -23,18 +23,18 @@ jobs:
         uses: microsoft/setup-msbuild@v2
 
       - uses: lukka/get-cmake@latest
-      
-      - name: Download OpenCV [4.11.0] source code
+
+      - name: Download OpenCV [4.10.0] source code
         run: |
-          Invoke-WebRequest -Uri "https://github.com/opencv/opencv/archive/refs/tags/4.11.0.zip" -OutFile "opencv-4.11.0.zip"
-          Expand-Archive -Path "opencv-4.11.0.zip" -DestinationPath "opencv"
-    
+          git clone https://github.com/opencv/opencv.git
+          cd opencv
+          git checkout tags/4.10.0
+
       - name: Configure OpenCV with CMake for Static Library
         shell: pwsh
         run: |
           # Navigate to the extracted OpenCV source folder
-          cd opencv/opencv-4.11.0
-          
+          cd opencv
           # Create build directory
           mkdir build
           cd build
@@ -89,11 +89,11 @@ jobs:
               -DWITH_ADE=OFF `
               -DWITH_CAROTENE=OFF
           }
-      
+
       - name: Build OpenCV Static Library
         shell: pwsh
         run: |
-          cd opencv/opencv-4.11.0/build
+          cd opencv/build
           
           # Build the project for the given architecture
           if ("${{ matrix.arch }}" -eq "x86") {
@@ -101,7 +101,7 @@ jobs:
           } else {
             cmake --build . --config Release -- /p:Platform=${{ matrix.arch }} /p:Configuration=Release
           }
-      
+
       - name: Configure Project with CMake
         shell: pwsh
         run: |
@@ -118,13 +118,13 @@ jobs:
               -DVCPKG_TARGET_TRIPLET=${{ matrix.arch }}-windows-static `
               -DCMAKE_CXX_FLAGS="/DNDEBUG /D__SSE2__=0 /D__AVX__=0"
           }
-      
+
       - name: Build Project with CMake
         shell: pwsh
         run: |
           cd build
           cmake --build . --config Release -- /p:Platform=${{ matrix.arch }}
-      
+
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
