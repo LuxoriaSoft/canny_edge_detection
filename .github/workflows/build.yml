@@ -84,7 +84,7 @@ jobs:
         run: |
           cd opencv/build
           cmake --build . --config Release -- /p:Platform=${{ matrix.arch }}
-          cmake --install . --prefix D:/opencv-install
+          cmake --build . --target INSTALL --config Release
       
       - name: Debug OpenCV Installation Folder
         shell: pwsh
