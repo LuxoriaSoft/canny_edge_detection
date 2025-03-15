@@ -50,7 +50,11 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release `
             -DBUILD_SHARED_LIBS=OFF `
             -DCMAKE_INSTALL_PREFIX=D:/opencv-install `
-            -DCMAKE_CXX_FLAGS="/DNDEBUG" `
+            -DCMAKE_CXX_FLAGS="/DNDEBUG /D__ARM_NEON__=1" `
+            -DENABLE_SSE=OFF `
+            -DENABLE_SSE2=OFF `
+            -DENABLE_AVX=OFF `
+            -DENABLE_AVX2=OFF `
             -DWITH_ITT=OFF `
             -DWITH_OPENCL=OFF `
             -DWITH_DIRECTML=OFF `
