@@ -49,7 +49,7 @@ jobs:
           if ("${{ matrix.arch }}" -eq 'arm64') {
             Write-Host "Building for ARM64 ..."
             cmake .. -G "Visual Studio 17 2022" -A $platform `
-              -DCMAKE_BUILD_TYPE=Debug `
+              -DCMAKE_BUILD_TYPE=Release `
               -DBUILD_SHARED_LIBS=OFF `
               -DCMAKE_INSTALL_PREFIX=D:/opencv-install `
               -DCMAKE_C_FLAGS="/DNDEBUG" `
@@ -74,7 +74,7 @@ jobs:
           } else {
             Write-Host "Building for x86 or x64 ..."
             cmake .. -G "Visual Studio 17 2022" -A $platform `
-              -DCMAKE_BUILD_TYPE=Debug `
+              -DCMAKE_BUILD_TYPE=Release `
               -DBUILD_SHARED_LIBS=OFF `
               -DCMAKE_INSTALL_PREFIX=D:/opencv-install `
               -DCMAKE_C_FLAGS="/DNDEBUG" `
@@ -97,8 +97,8 @@ jobs:
         shell: pwsh
         run: |
           cd opencv/build
-          cmake --build . --config Debug -- /p:Platform=${{ matrix.arch }}
-          cmake --build . --target INSTALL --config Debug
+          cmake --build . --config Release -- /p:Platform=${{ matrix.arch }}
+          cmake --build . --target INSTALL --config Release
       
       - name: Debug OpenCV Installation Folder
         shell: pwsh
@@ -121,19 +121,19 @@ jobs:
           }
 
           if ("${{ matrix.arch }}" -eq "x86") {
-            cmake .. -G "Visual Studio 17 2022" -A $platform -DCMAKE_BUILD_TYPE=Debug `
+            cmake .. -G "Visual Studio 17 2022" -A $platform -DCMAKE_BUILD_TYPE=Release `
               -DOpenCV_DIR="D:/opencv-install" `
               -DCMAKE_PREFIX_PATH="D:/opencv-install" `
               -DCMAKE_C_FLAGS="/DNDEBUG" `
-              -DCMAKE_CXX_FLAGS_RELEASE="/DNDEBUG" `
+              -DCMAKE_CXX_FLAGS="/DNDEBUG" `
               -DCMAKE_C_FLAGS_RELEASE="/DNDEBUG" `
               -DCMAKE_CXX_FLAGS_RELEASE="/DNDEBUG"
           } else {
-            cmake .. -G "Visual Studio 17 2022" -A $platform -DCMAKE_BUILD_TYPE=Debug `
+            cmake .. -G "Visual Studio 17 2022" -A $platform -DCMAKE_BUILD_TYPE=Release `
               -DOpenCV_DIR="D:/opencv-install" `
               -DCMAKE_PREFIX_PATH="D:/opencv-install" `
               -DCMAKE_C_FLAGS="/DNDEBUG" `
-              -DCMAKE_CXX_FLAGS_RELEASE="/DNDEBUG" `
+              -DCMAKE_CXX_FLAGS="/DNDEBUG" `
               -DCMAKE_C_FLAGS_RELEASE="/DNDEBUG" `
               -DCMAKE_CXX_FLAGS_RELEASE="/DNDEBUG"
           }
@@ -142,13 +142,13 @@ jobs:
         shell: pwsh
         run: |
           cd build
-          cmake --build . --config Debug -- /p:Platform=${{ matrix.arch }}
+          cmake --build . --config Release -- /p:Platform=${{ matrix.arch }}
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
           name: grabcut-detection-${{ matrix.arch }}
-          path: D:\a\grabcut_image_segementation\grabcut_image_segementation\build\bin\Debug\
+          path: D:\a\grabcut_image_segementation\grabcut_image_segementation\build\bin\Release\
 
 # DOCS :
 # Add additional flags to the CMAKE_CXX_FLAGS variable to enable or disable specific features.
