@@ -53,6 +53,7 @@ jobs:
               -DBUILD_SHARED_LIBS=OFF `
               -DCMAKE_INSTALL_PREFIX=D:/opencv-install `
               -DCMAKE_CXX_FLAGS="/DNDEBUG /D__ARM_NEON__=1" `
+              -DNDEBUG `
               -DENABLE_SSE=OFF `
               -DENABLE_SSE2=OFF `
               -DENABLE_AVX=OFF `
@@ -75,6 +76,7 @@ jobs:
               -DBUILD_SHARED_LIBS=OFF `
               -DCMAKE_INSTALL_PREFIX=D:/opencv-install `
               -DCMAKE_CXX_FLAGS="/DNDEBUG" `
+              -DNDEBUG `
               -DWITH_ITT=OFF `
               -DWITH_OPENCL=OFF `
               -DWITH_DIRECTML=OFF `
