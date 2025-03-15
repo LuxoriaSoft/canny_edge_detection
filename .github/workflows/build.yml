@@ -63,7 +63,11 @@ jobs:
               -DWITH_DIRECTML=OFF `
               -DWITH_DIRECTX=OFF `
               -DWITH_ADE=OFF `
-              -DWITH_CAROTENE=OFF
+              -DWITH_CAROTENE=OFF `
+              -DBUILD_EXAMPLES=OFF `
+              -DBUILD_TESTS=OFF `
+              -DBUILD_PERF_TESTS=OFF `
+              -DBUILD_DOCS=OFF
           } else {
             Write-Host "Building for x86 or x64 ..."
             cmake .. -G "Visual Studio 17 2022" -A $platform `
@@ -76,7 +80,11 @@ jobs:
               -DWITH_DIRECTML=OFF `
               -DWITH_DIRECTX=OFF `
               -DWITH_ADE=OFF `
-              -DWITH_CAROTENE=OFF
+              -DWITH_CAROTENE=OFF `
+              -DBUILD_EXAMPLES=OFF `
+              -DBUILD_TESTS=OFF `
+              -DBUILD_PERF_TESTS=OFF `
+              -DBUILD_DOCS=OFF
           }
   
       - name: Build OpenCV Static Library
@@ -90,9 +98,6 @@ jobs:
         shell: pwsh
         run: |
           Get-ChildItem -Path D:/opencv-install -Recurse
-          ls D:/opencv-install
-          ls D:/opencv-install/bin
-          ls D:/opencv-install/lib
 
       - name: Configure Project with CMake
         shell: pwsh
