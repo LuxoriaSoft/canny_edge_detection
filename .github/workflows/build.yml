@@ -121,7 +121,7 @@ jobs:
           }
 
           if ("${{ matrix.arch }}" -eq "x86") {
-            cmake .. -G "Visual Studio 17 2022" -A $platform -DCMAKE_BUILD_TYPE=Release `
+            cmake .. -G "Visual Studio 17 2022" -A $platform -DCMAKE_BUILD_TYPE=Debug `
               -DOpenCV_DIR="D:/opencv-install" `
               -DCMAKE_PREFIX_PATH="D:/opencv-install" `
               -DCMAKE_C_FLAGS="/DNDEBUG" `
@@ -129,7 +129,7 @@ jobs:
               -DCMAKE_C_FLAGS_RELEASE="/DNDEBUG" `
               -DCMAKE_CXX_FLAGS_RELEASE="/DNDEBUG"
           } else {
-            cmake .. -G "Visual Studio 17 2022" -A $platform -DCMAKE_BUILD_TYPE=Release `
+            cmake .. -G "Visual Studio 17 2022" -A $platform -DCMAKE_BUILD_TYPE=Debug `
               -DOpenCV_DIR="D:/opencv-install" `
               -DCMAKE_PREFIX_PATH="D:/opencv-install" `
               -DCMAKE_C_FLAGS="/DNDEBUG" `
@@ -142,13 +142,13 @@ jobs:
         shell: pwsh
         run: |
           cd build
-          cmake --build . --config Release -- /p:Platform=${{ matrix.arch }}
+          cmake --build . --config Debug -- /p:Platform=${{ matrix.arch }}
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
           name: grabcut-detection-${{ matrix.arch }}
-          path: D:\a\grabcut_image_segementation\grabcut_image_segementation\build\bin\Release\
+          path: D:\a\grabcut_image_segementation\grabcut_image_segementation\build\bin\Debug\
 
 # DOCS :
 # Add additional flags to the CMAKE_CXX_FLAGS variable to enable or disable specific features.
