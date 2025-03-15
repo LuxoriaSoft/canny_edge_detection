@@ -33,75 +33,36 @@ jobs:
       - name: Configure OpenCV with CMake for Static Library
         shell: pwsh
         run: |
-          # Navigate to the extracted OpenCV source folder
           cd opencv
-          
-          # Create build directory
           mkdir build
           cd build
-          
-          # CMake Configuration for Static Library based on architecture
+
+          # Choose the right CMake generator based on architecture
           if ("${{ matrix.arch }}" -eq 'x86') {
-            # For x86, specify Win32 platform explicitly
-            cmake .. -G "Visual Studio 17 2022" -A Win32 `
-              -DCMAKE_BUILD_TYPE=Release `
-              -DBUILD_SHARED_LIBS=OFF `
-              -DCMAKE_INSTALL_PREFIX=D:/opencv-install `
-              -DCMAKE_CXX_FLAGS="/DNDEBUG /D__SSE2__=1" `
-              -DWITH_ITT=OFF `
-              -DWITH_OPENCL=OFF `
-              -DWITH_OPENCLAMDBLAS=OFF `
-              -DWITH_OPENCLAMDFFT=OFF `
-              -DWITH_OPENCL_D3D11_NV=OFF `
-              -DWITH_DIRECTML=OFF `
-              -DWITH_DIRECTX=OFF `
-              -DWITH_ADE=OFF `
-              -DWITH_CAROTENE=OFF
+            $platform = "Win32"
           } elseif ("${{ matrix.arch }}" -eq 'x64') {
-            # For x64 architecture
-            cmake .. -G "Visual Studio 17 2022" -A x64 `
-              -DCMAKE_BUILD_TYPE=Release `
-              -DBUILD_SHARED_LIBS=OFF `
-              -DCMAKE_INSTALL_PREFIX=D:/opencv-install `
-              -DCMAKE_CXX_FLAGS="/DNDEBUG /D__SSE2__=1" `
-              -DWITH_ITT=OFF `
-              -DWITH_OPENCL=OFF `
-              -DWITH_OPENCLAMDBLAS=OFF `
-              -DWITH_OPENCLAMDFFT=OFF `
-              -DWITH_OPENCL_D3D11_NV=OFF `
-              -DWITH_DIRECTML=OFF `
-              -DWITH_DIRECTX=OFF `
-              -DWITH_ADE=OFF `
-              -DWITH_CAROTENE=OFF
+            $platform = "x64"
           } else {
-            # For ARM64 architecture
-            cmake .. -G "Visual Studio 17 2022" -A arm64 `
-              -DCMAKE_BUILD_TYPE=Release `
-              -DBUILD_SHARED_LIBS=OFF `
-              -DCMAKE_INSTALL_PREFIX=D:/opencv-install `
-              -DCMAKE_CXX_FLAGS="/DNDEBUG" `
-              -DWITH_ITT=OFF `
-              -DWITH_OPENCL=OFF `
-              -DWITH_OPENCLAMDBLAS=OFF `
-              -DWITH_OPENCLAMDFFT=OFF `
-              -DWITH_OPENCL_D3D11_NV=OFF `
-              -DWITH_DIRECTML=OFF `
-              -DWITH_DIRECTX=OFF `
-              -DWITH_ADE=OFF `
-              -DWITH_CAROTENE=OFF
+            $platform = "ARM64"
           }
 
+          cmake .. -G "Visual Studio 17 2022" -A $platform `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DBUILD_SHARED_LIBS=OFF `
+            -DCMAKE_INSTALL_PREFIX=D:/opencv-install `
+            -DCMAKE_CXX_FLAGS="/DNDEBUG" `
+            -DWITH_ITT=OFF `
+            -DWITH_OPENCL=OFF `
+            -DWITH_DIRECTML=OFF `
+            -DWITH_DIRECTX=OFF `
+            -DWITH_ADE=OFF `
+            -DWITH_CAROTENE=OFF
+  
       - name: Build OpenCV Static Library
         shell: pwsh
         run: |
           cd opencv/build
-          
-          # Build the project for the given architecture
-          if ("${{ matrix.arch }}" -eq "x86") {
-            cmake --build . --config Release -- /p:Platform=Win32 /p:Configuration=Release
-          } else {
-            cmake --build . --config Release -- /p:Platform=${{ matrix.arch }} /p:Configuration=Release
-          }
+          cmake --build . --config Release -- /p:Platform=${{ matrix.arch }}
 
       - name: Configure Project with CMake
         shell: pwsh
