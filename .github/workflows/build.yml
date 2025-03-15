@@ -87,7 +87,9 @@ jobs:
           cmake --install . --prefix D:/opencv-install
       
       - name: Debug OpenCV Installation Folder
+        shell: pwsh
         run: |
+          Get-ChildItem -Path D:/opencv-install -Recurse
           ls D:/opencv-install
           ls D:/opencv-install/bin
           ls D:/opencv-install/lib
