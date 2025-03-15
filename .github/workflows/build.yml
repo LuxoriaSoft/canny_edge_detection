@@ -52,10 +52,10 @@ jobs:
               -DCMAKE_BUILD_TYPE=Release `
               -DBUILD_SHARED_LIBS=OFF `
               -DCMAKE_INSTALL_PREFIX=D:/opencv-install `
-              -DCMAKE_C_FLAGS="/DNDEBUG /D__ARM_NEON__=1" `
-              -DCMAKE_CXX_FLAGS="/DNDEBUG /D__ARM_NEON__=1" `
-              -DCMAKE_C_FLAGS_RELEASE="/DNDEBUG /D__ARM_NEON__=1" `
-              -DCMAKE_CXX_FLAGS_RELEASE="/DNDEBUG /D__ARM_NEON__=1" `
+              -DCMAKE_C_FLAGS="/DNDEBUG" `
+              -DCMAKE_CXX_FLAGS="/DNDEBUG" `
+              -DCMAKE_C_FLAGS_RELEASE="/DNDEBUG" `
+              -DCMAKE_CXX_FLAGS_RELEASE="/DNDEBUG" `
               -DENABLE_SSE=OFF `
               -DENABLE_SSE2=OFF `
               -DENABLE_AVX=OFF `
