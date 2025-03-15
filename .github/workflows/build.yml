@@ -11,7 +11,7 @@ jobs:
       fail-fast: false
       matrix:
         os: ["windows-2022"]
-        arch: ["x86", "x64", "arm64", "arm"]
+        arch: ["x86", "x64", "arm64"]
 
     runs-on: windows-2022
 
@@ -46,28 +46,45 @@ jobs:
             $platform = "ARM64"
           }
 
-          cmake .. -G "Visual Studio 17 2022" -A $platform `
-            -DCMAKE_BUILD_TYPE=Release `
-            -DBUILD_SHARED_LIBS=OFF `
-            -DCMAKE_INSTALL_PREFIX=D:/opencv-install `
-            -DCMAKE_CXX_FLAGS="/DNDEBUG /D__ARM_NEON__=1" `
-            -DENABLE_SSE=OFF `
-            -DENABLE_SSE2=OFF `
-            -DENABLE_AVX=OFF `
-            -DENABLE_AVX2=OFF `
-            -DWITH_IPP=OFF `
-            -DWITH_ITT=OFF `
-            -DWITH_OPENCL=OFF `
-            -DWITH_DIRECTML=OFF `
-            -DWITH_DIRECTX=OFF `
-            -DWITH_ADE=OFF `
-            -DWITH_CAROTENE=OFF
+          if ("${{ matrix.arch }}" -eq 'arm64') {
+            Write-Host "Building for ARM64 ..."
+            cmake .. -G "Visual Studio 17 2022" -A $platform `
+              -DCMAKE_BUILD_TYPE=Release `
+              -DBUILD_SHARED_LIBS=OFF `
+              -DCMAKE_INSTALL_PREFIX=D:/opencv-install `
+              -DCMAKE_CXX_FLAGS="/DNDEBUG /D__ARM_NEON__=1" `
+              -DENABLE_SSE=OFF `
+              -DENABLE_SSE2=OFF `
+              -DENABLE_AVX=OFF `
+              -DENABLE_AVX2=OFF `
+              -DWITH_IPP=OFF `
+              -DWITH_ITT=OFF `
+              -DWITH_OPENCL=OFF `
+              -DWITH_DIRECTML=OFF `
+              -DWITH_DIRECTX=OFF `
+              -DWITH_ADE=OFF `
+              -DWITH_CAROTENE=OFF
+          } else {
+            Write-Host "Building for x86 or x64 ..."
+            cmake .. -G "Visual Studio 17 2022" -A $platform `
+              -DCMAKE_BUILD_TYPE=Release `
+              -DBUILD_SHARED_LIBS=OFF `
+              -DCMAKE_INSTALL_PREFIX=D:/opencv-install `
+              -DCMAKE_CXX_FLAGS="/DNDEBUG" `
+              -DWITH_ITT=OFF `
+              -DWITH_OPENCL=OFF `
+              -DWITH_DIRECTML=OFF `
+              -DWITH_DIRECTX=OFF `
+              -DWITH_ADE=OFF `
+              -DWITH_CAROTENE=OFF
+          }
   
       - name: Build OpenCV Static Library
         shell: pwsh
         run: |
           cd opencv/build
           cmake --build . --config Release -- /p:Platform=${{ matrix.arch }}
+          cmake --install . --prefix D:/opencv-install
 
       - name: Configure Project with CMake
         shell: pwsh
@@ -76,14 +93,12 @@ jobs:
           cd build
           if ("${{ matrix.arch }}" -eq "x86") {
             cmake .. -G "Visual Studio 17 2022" -A Win32 -DCMAKE_BUILD_TYPE=Release `
-              -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake" `
-              -DVCPKG_TARGET_TRIPLET=x86-windows-static `
-              -DCMAKE_CXX_FLAGS="/DNDEBUG /D__SSE2__=0 /D__AVX__=0"
+              -DOpenCV_DIR="D:/opencv-install" `
+              -DCMAKE_CXX_FLAGS="/DNDEBUG"
           } else {
             cmake .. -G "Visual Studio 17 2022" -A ${{ matrix.arch }} -DCMAKE_BUILD_TYPE=Release `
-              -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake" `
-              -DVCPKG_TARGET_TRIPLET=${{ matrix.arch }}-windows-static `
-              -DCMAKE_CXX_FLAGS="/DNDEBUG /D__SSE2__=0 /D__AVX__=0"
+              -DOpenCV_DIR="D:/opencv-install" `
+              -DCMAKE_CXX_FLAGS="/DNDEBUG /D__ARM_NEON__=1"
           }
 
       - name: Build Project with CMake

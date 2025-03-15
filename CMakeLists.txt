@@ -13,15 +13,12 @@ set(CMAKE_BUILD_TYPE Release)
 add_definitions(-DNDEBUG)
 
 # Handle OpenCV on different platforms
-if(DEFINED ENV{VCPKG_INSTALLED_DIR})
-    # If vcpkg is used, point to the vcpkg OpenCV directory
-    set(OpenCV_ROOT "$ENV{VCPKG_INSTALLED_DIR}/${CMAKE_VCPKG_TARGET_TRIPLET}/share/opencv4")
+if(WIN32)
+    set(OpenCV_DIR "D:/opencv-install")
+    find_package(OpenCV REQUIRED PATHS "D:/opencv-install" NO_DEFAULT_PATH)
 elseif(APPLE)
     # If on macOS, Homebrew might be used to install OpenCV
     find_package(OpenCV REQUIRED PATHS /usr/local/opt/opencv4 /opt/homebrew/opt/opencv4)
-elseif(WIN32)
-    # If on Windows, use OpenCV path from vcpkg or from a custom path
-    find_package(OpenCV REQUIRED PATHS "C:/path/to/vcpkg/installed/x64-windows/share/opencv4")
 else()
     # Default OpenCV search if the platform is neither macOS nor Windows
     find_package(OpenCV REQUIRED)
