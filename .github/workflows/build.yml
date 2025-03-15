@@ -49,7 +49,7 @@ jobs:
           if ("${{ matrix.arch }}" -eq 'arm64') {
             Write-Host "Building for ARM64 ..."
             cmake .. -G "Visual Studio 17 2022" -A $platform `
-              -DCMAKE_BUILD_TYPE=Release `
+              -DCMAKE_BUILD_TYPE=Debug `
               -DBUILD_SHARED_LIBS=OFF `
               -DCMAKE_INSTALL_PREFIX=D:/opencv-install `
               -DCMAKE_CXX_FLAGS="/DNDEBUG /D__ARM_NEON__=1" `
@@ -67,12 +67,11 @@ jobs:
               -DBUILD_EXAMPLES=OFF `
               -DBUILD_TESTS=OFF `
               -DBUILD_PERF_TESTS=OFF `
-              -DBUILD_DOCS=OFF `
-              /DNDEBUG
+              -DBUILD_DOCS=OFF
           } else {
             Write-Host "Building for x86 or x64 ..."
             cmake .. -G "Visual Studio 17 2022" -A $platform `
-              -DCMAKE_BUILD_TYPE=Release `
+              -DCMAKE_BUILD_TYPE=Debug `
               -DBUILD_SHARED_LIBS=OFF `
               -DCMAKE_INSTALL_PREFIX=D:/opencv-install `
               -DCMAKE_CXX_FLAGS="/DNDEBUG" `
@@ -85,8 +84,7 @@ jobs:
               -DBUILD_EXAMPLES=OFF `
               -DBUILD_TESTS=OFF `
               -DBUILD_PERF_TESTS=OFF `
-              -DBUILD_DOCS=OFF `
-              /DNDEBUG
+              -DBUILD_DOCS=OFF
           }
   
       - name: Build OpenCV Static Library
