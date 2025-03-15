@@ -12,6 +12,9 @@ set(CMAKE_BUILD_TYPE Release)
 # Add the NDEBUG flag for Release builds
 add_definitions(-DNDEBUG)
 
+# Set the OpenCV static flag
+set(OpenCV_STATIC ON)
+
 # Handle OpenCV on different platforms
 if(WIN32)
     set(OpenCV_DIR "D:/opencv-install")
