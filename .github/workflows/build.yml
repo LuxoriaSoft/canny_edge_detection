@@ -124,12 +124,18 @@ jobs:
             cmake .. -G "Visual Studio 17 2022" -A $platform -DCMAKE_BUILD_TYPE=Release `
               -DOpenCV_DIR="D:/opencv-install" `
               -DCMAKE_PREFIX_PATH="D:/opencv-install" `
-              -DCMAKE_CXX_FLAGS="/DNDEBUG"
+              -DCMAKE_C_FLAGS="/DNDEBUG" `
+              -DCMAKE_CXX_FLAGS_RELEASE="/DNDEBUG" `
+              -DCMAKE_C_FLAGS_RELEASE="/DNDEBUG" `
+              -DCMAKE_CXX_FLAGS_RELEASE="/DNDEBUG"
           } else {
             cmake .. -G "Visual Studio 17 2022" -A $platform -DCMAKE_BUILD_TYPE=Release `
               -DOpenCV_DIR="D:/opencv-install" `
               -DCMAKE_PREFIX_PATH="D:/opencv-install" `
-              -DCMAKE_CXX_FLAGS="/DNDEBUG /D__ARM_NEON__=1"
+              -DCMAKE_C_FLAGS="/DNDEBUG" `
+              -DCMAKE_CXX_FLAGS_RELEASE="/DNDEBUG" `
+              -DCMAKE_C_FLAGS_RELEASE="/DNDEBUG" `
+              -DCMAKE_CXX_FLAGS_RELEASE="/DNDEBUG"
           }
 
       - name: Build Project with CMake
