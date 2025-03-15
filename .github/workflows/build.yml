@@ -49,7 +49,7 @@ jobs:
           if ("${{ matrix.arch }}" -eq 'arm64') {
             Write-Host "Building for ARM64 ..."
             cmake .. -G "Visual Studio 17 2022" -A $platform `
-              -DCMAKE_BUILD_TYPE=Release `
+              -DCMAKE_BUILD_TYPE=Debug `
               -DBUILD_SHARED_LIBS=OFF `
               -DCMAKE_INSTALL_PREFIX=D:/opencv-install `
               -DCMAKE_C_FLAGS="/DNDEBUG" `
@@ -74,7 +74,7 @@ jobs:
           } else {
             Write-Host "Building for x86 or x64 ..."
             cmake .. -G "Visual Studio 17 2022" -A $platform `
-              -DCMAKE_BUILD_TYPE=Release `
+              -DCMAKE_BUILD_TYPE=Debug `
               -DBUILD_SHARED_LIBS=OFF `
               -DCMAKE_INSTALL_PREFIX=D:/opencv-install `
               -DCMAKE_C_FLAGS="/DNDEBUG" `
@@ -97,8 +97,8 @@ jobs:
         shell: pwsh
         run: |
           cd opencv/build
-          cmake --build . --config Release -- /p:Platform=${{ matrix.arch }}
-          cmake --build . --target INSTALL --config Release
+          cmake --build . --config Debug -- /p:Platform=${{ matrix.arch }}
+          cmake --build . --target INSTALL --config Debug
       
       - name: Debug OpenCV Installation Folder
         shell: pwsh
