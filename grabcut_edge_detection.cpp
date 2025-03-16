@@ -1,46 +1,3 @@
-/**
- * GrabCut with Multi-Scale Canny Edge Detection:
- *
- * This program integrates the GrabCut algorithm with multi-scale Canny edge detection
- * to segment the foreground from the background in an image. The primary goal is to compute foreground
- * and background probabilities and visualize the results.
- *
- * Key Components and Workflow:
- *
- * 1. Multi-Scale Canny Edge Detection:
- *    - The program applies Canny edge detection at multiple scales (using different Gaussian smoothing
- *      levels) to detect edges in the input image.
- *    - The edges detected at different scales are combined and refined using morphological operations
- *      to close small gaps.
- *    - Algorithm: Canny edge detection with Gaussian smoothing and morphological closing.
- *
- * 2. GrabCut Segmentation:
- *    - The GrabCut algorithm is used to segment the foreground from the background in the image.
- *    - A bounding box is defined to initialize the segmentation process, and the algorithm iteratively
- *      refines the segmentation based on color statistics.
- *    - Algorithm: GrabCut for foreground-background segmentation.
- *
- * 3. Foreground and Background Probability Computation:
- *    - The foreground probability is computed from the GrabCut segmentation result.
- *    - The program calculates the mean foreground probability and an edge-weighted foreground score,
- *      which considers the overlap between the foreground and the detected edges.
- *    - Algorithm: Mean calculation and edge-weighted scoring.
- *
- * 4. Implementation:
- *    - The program is implemented using OpenCV, a popular computer vision library.
- *    - It reads an input image, processes it to detect edges and segment the foreground, and then
- *      computes various scores to quantify the segmentation quality.
- *    - The results are displayed using OpenCV's visualization functions.
- *
- * 5. Output:
- *    - The program outputs the foreground probability score, background probability score, and
- *      edge-weighted foreground score.
- *    - It also displays the foreground probability map and the refined edges for visual inspection.
- *
- * Usage:
- * - The program is executed from the command line with the path to an input image as an argument.
- * - Example: ./grabcut_edge_detection <image_path>
- */
 #include <opencv2/opencv.hpp>
 #include <iostream>
 #include <tuple>
@@ -48,9 +5,8 @@
 
 /**
  * Applies multi-scale Canny edge detection to the input image.
- * This version includes a more adaptive approach to edge refinement.
  * @param image: Input image (grayscale)
- * @param sigma_list: List of sigma values for Gaussian smoothing (default {1.0, 2.0, 3.0})
+ * @param sigma_list: List of sigma values for Gaussian smoothing
  * @return edges_refined: Refined edges after morphological closing
  */
 cv::Mat multi_scale_canny(const cv::Mat& image, const std::vector<double>& sigma_list = {1.0, 2.0, 3.0}) {
@@ -85,9 +41,11 @@ cv::Mat grabcut_foreground(const cv::Mat& image) {
     bgd_model.create(1, 65, CV_64F);
     fgd_model.create(1, 65, CV_64F);
 
+    // Define a border for the bounding box, ensuring it's large enough
     int border = std::min(image.cols, image.rows) / 10;  // 10% padding
     cv::Rect rect(border, border, image.cols - 2 * border, image.rows - 2 * border);
 
+    // Ensure that the bounding box is valid
     if (rect.width <= 1 || rect.height <= 1) {
         std::cerr << "Error: Bounding box is too small!" << std::endl;
         return cv::Mat::zeros(image.size(), CV_8UC1);
@@ -97,9 +55,10 @@ cv::Mat grabcut_foreground(const cv::Mat& image) {
         cv::grabCut(image, mask, rect, bgd_model, fgd_model, 5, cv::GC_INIT_WITH_RECT);  // GrabCut with 5 iterations
     } catch (const cv::Exception& e) {
         std::cerr << "OpenCV Exception: " << e.what() << std::endl;
-        return cv::Mat::zeros(image.size(), CV_8UC1);
+        return cv::Mat::zeros(image.size(), CV_8UC1);  // Return empty mask in case of error
     }
 
+    // Generate a binary mask for foreground (GC_FGD and GC_PR_FGD are the foreground labels)
     cv::Mat fg_mask = (mask == cv::GC_FGD) | (mask == cv::GC_PR_FGD);
     fg_mask.convertTo(fg_mask, CV_64F);  // Convert to double for further computation
 
