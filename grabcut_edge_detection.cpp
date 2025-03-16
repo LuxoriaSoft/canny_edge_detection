@@ -41,19 +41,16 @@
  * - The program is executed from the command line with the path to an input image as an argument.
  * - Example: ./grabcut_edge_detection <image_path>
  */
-
 #include <opencv2/opencv.hpp>
 #include <iostream>
 #include <tuple>
 #include <vector>
 
 /**
- * This function applies multi-scale Canny edge detection to an input image.
- * It returns the refined edges after morphological closing.
- * The function takes an input image and a list of sigma values for Gaussian smoothing.
- * The default sigma values are {1.0, 2.0, 3.0}.
+ * Applies multi-scale Canny edge detection to the input image.
+ * This version includes a more adaptive approach to edge refinement.
  * @param image: Input image (grayscale)
- * @param sigma_list: List of sigma values for Gaussian smoothing
+ * @param sigma_list: List of sigma values for Gaussian smoothing (default {1.0, 2.0, 3.0})
  * @return edges_refined: Refined edges after morphological closing
  */
 cv::Mat multi_scale_canny(const cv::Mat& image, const std::vector<double>& sigma_list = {1.0, 2.0, 3.0}) {
@@ -61,13 +58,14 @@ cv::Mat multi_scale_canny(const cv::Mat& image, const std::vector<double>& sigma
 
     for (double sigma : sigma_list) {
         cv::Mat blurred;
-        cv::GaussianBlur(image, blurred, cv::Size(5, 5), sigma);  // Gaussian smoothing
+        int kernel_size = std::max(3, static_cast<int>(std::round(sigma * 2.0 + 1)));  // Dynamically set kernel size
+        cv::GaussianBlur(image, blurred, cv::Size(kernel_size, kernel_size), sigma);  // Gaussian smoothing
         cv::Mat edges;
         cv::Canny(blurred, edges, 50, 150);  // Canny edge detection
         edges_combined = cv::max(edges_combined, edges);  // Combine edges across scales
     }
 
-    // Close small gaps in edges (morphological closing)
+    // Morphological closing to refine edges
     cv::Mat edges_refined;
     cv::morphologyEx(edges_combined, edges_refined, cv::MORPH_CLOSE, cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3)));
 
@@ -75,39 +73,33 @@ cv::Mat multi_scale_canny(const cv::Mat& image, const std::vector<double>& sigma
 }
 
 /**
- * This function applies GrabCut algorithm to an input image and returns the foreground mask.
- * The function takes an input image and returns a binary mask where 1 represents the foreground.
+ * Applies the GrabCut algorithm and returns a binary foreground mask.
  * @param image: Input image (BGR)
- * @return fg_mask: Foreground mask (binary)
+ * @return fg_mask: Binary foreground mask
  */
 cv::Mat grabcut_foreground(const cv::Mat& image) {
-    cv::Mat mask;
-    mask.create(image.size(), CV_8UC1);
+    cv::Mat mask = cv::Mat::zeros(image.size(), CV_8UC1);
     mask.setTo(cv::GC_BGD);  // Initialize all pixels as background
 
-    // Initialize background and foreground models
     cv::Mat bgd_model, fgd_model;
     bgd_model.create(1, 65, CV_64F);
     fgd_model.create(1, 65, CV_64F);
 
-    // Define a bounding box adaptively
     int border = std::min(image.cols, image.rows) / 10;  // 10% padding
     cv::Rect rect(border, border, image.cols - 2 * border, image.rows - 2 * border);
 
     if (rect.width <= 1 || rect.height <= 1) {
         std::cerr << "Error: Bounding box is too small!" << std::endl;
-        return cv::Mat::zeros(image.size(), CV_64F);
+        return cv::Mat::zeros(image.size(), CV_8UC1);
     }
 
-    // Apply GrabCut
     try {
-        cv::grabCut(image, mask, rect, bgd_model, fgd_model, 5, cv::GC_INIT_WITH_RECT);
+        cv::grabCut(image, mask, rect, bgd_model, fgd_model, 5, cv::GC_INIT_WITH_RECT);  // GrabCut with 5 iterations
     } catch (const cv::Exception& e) {
         std::cerr << "OpenCV Exception: " << e.what() << std::endl;
-        return cv::Mat::zeros(image.size(), CV_64F);
+        return cv::Mat::zeros(image.size(), CV_8UC1);
     }
 
-    // Convert mask to binary foreground mask
     cv::Mat fg_mask = (mask == cv::GC_FGD) | (mask == cv::GC_PR_FGD);
     fg_mask.convertTo(fg_mask, CV_64F);  // Convert to double for further computation
 
@@ -115,8 +107,7 @@ cv::Mat grabcut_foreground(const cv::Mat& image) {
 }
 
 /**
- * This function computes the foreground and background probabilities based on the input image and refined edges.
- * The function returns the foreground probability, foreground score, background score, and edge-weighted foreground score.
+ * Computes foreground and background probabilities based on the input image and refined edges.
  * @param image_rgb: Input image (BGR)
  * @param edges_refined: Refined edges (binary)
  * @return fg_prob: Foreground probability (floating point)
@@ -153,32 +144,35 @@ std::tuple<cv::Mat, double, double, double> compute_foreground_background_probab
 }
 
 /**
- * Main function to demonstrate GrabCut with edge detection.
- * The function loads an input image, applies multi-scale Canny edge detection, and computes foreground probabilities.
- * The function displays the foreground probability, refined edges, and the scores.
+ * Main function demonstrating GrabCut with edge detection.
+ * Loads an input image, applies multi-scale Canny edge detection, and computes foreground probabilities.
+ * Displays the foreground probability, refined edges, and the scores.
  * @param ac: Argument count
  * @param av: Argument values
  * @return 0 if successful
  * @return -1 if input image is not provided
  */
 int main(int ac, char** av) {
-    // Check if the input image is provided (if input size is not 2, return -1 and show usage message)
+    // Check if input image is provided
     if (ac != 2) {
         std::cout << "Usage: ./grabcut_edge_detection <image_path>" << std::endl;
         return -1;
     }
 
-    // Load the image (ensure the path is correct)
+    // Load the image
     std::cout << "Loading image: " << av[1] << std::endl;
-
     cv::Mat image = cv::imread(av[1], cv::IMREAD_COLOR);  // Load your image here
     if (image.empty()) {
         std::cout << "Could not open or find the image!" << std::endl;
         return -1;
     }
 
+    // Resize the image for faster processing if it's large
+    if (image.rows > 800 || image.cols > 800) {
+        cv::resize(image, image, cv::Size(image.cols / 2, image.rows / 2));  // Resize to half the original size
+    }
+
     // Convert image to grayscale for edge detection
-    std::cout << "Processing image..." << std::endl;
     cv::Mat gray_image;
     cv::cvtColor(image, gray_image, cv::COLOR_BGR2GRAY);
 
@@ -192,7 +186,7 @@ int main(int ac, char** av) {
     double foreground_score, background_score, edge_weighted_fg;
     std::tie(fg_prob, foreground_score, background_score, edge_weighted_fg) = compute_foreground_background_probability(image, edges_refined);
 
-    // Print out the probabilities (scores gapped to 1)
+    // Output the probabilities (scores normalized to [0, 1])
     std::cout << "Foreground Probability Score: " << foreground_score << std::endl;
     std::cout << "Background Probability Score: " << background_score << std::endl;
     std::cout << "Edge-Weighted Foreground Score: " << edge_weighted_fg << std::endl;
