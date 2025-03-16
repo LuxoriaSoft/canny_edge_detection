@@ -81,22 +81,35 @@ cv::Mat multi_scale_canny(const cv::Mat& image, const std::vector<double>& sigma
  * @return fg_mask: Foreground mask (binary)
  */
 cv::Mat grabcut_foreground(const cv::Mat& image) {
-    cv::Mat mask = cv::Mat::zeros(image.size(), CV_8UC1);
+    cv::Mat mask;
+    mask.create(image.size(), CV_8UC1);
+    mask.setTo(cv::GC_BGD);  // Initialize all pixels as background
 
-    // Background and foreground models, required by GrabCut
+    // Initialize background and foreground models
     cv::Mat bgd_model, fgd_model;
     bgd_model.create(1, 65, CV_64F);
     fgd_model.create(1, 65, CV_64F);
 
-    // Define a bounding box (adjust based on the input image)
-    cv::Rect rect(50, 50, image.cols - 100, image.rows - 100);  // x, y, width, height
+    // Define a bounding box adaptively
+    int border = std::min(image.cols, image.rows) / 10;  // 10% padding
+    cv::Rect rect(border, border, image.cols - 2 * border, image.rows - 2 * border);
 
-    // Run GrabCut
-    cv::grabCut(image, mask, rect, bgd_model, fgd_model, 5, cv::GC_INIT_WITH_RECT);
+    if (rect.width <= 1 || rect.height <= 1) {
+        std::cerr << "Error: Bounding box is too small!" << std::endl;
+        return cv::Mat::zeros(image.size(), CV_64F);
+    }
 
-    // Mask the background pixels as 0 and foreground pixels as 1
-    cv::Mat fg_mask = (mask == cv::GC_FGD) | (mask == cv::GC_PR_FGD);  // Foreground mask
-    fg_mask.convertTo(fg_mask, CV_64F); // Convert mask to CV_64F for further computation
+    // Apply GrabCut
+    try {
+        cv::grabCut(image, mask, rect, bgd_model, fgd_model, 5, cv::GC_INIT_WITH_RECT);
+    } catch (const cv::Exception& e) {
+        std::cerr << "OpenCV Exception: " << e.what() << std::endl;
+        return cv::Mat::zeros(image.size(), CV_64F);
+    }
+
+    // Convert mask to binary foreground mask
+    cv::Mat fg_mask = (mask == cv::GC_FGD) | (mask == cv::GC_PR_FGD);
+    fg_mask.convertTo(fg_mask, CV_64F);  // Convert to double for further computation
 
     return fg_mask;
 }
@@ -139,30 +152,50 @@ std::tuple<cv::Mat, double, double, double> compute_foreground_background_probab
     return std::make_tuple(fg_prob, foreground_score, background_score, edge_weighted_fg);
 }
 
-int main(int argc, char** argv) {
-    // Load image from file
-    cv::Mat image = cv::imread(argv[1], cv::IMREAD_COLOR);
-    if (image.empty()) return -1;
+/**
+ * Main function to demonstrate GrabCut with edge detection.
+ * The function loads an input image, applies multi-scale Canny edge detection, and computes foreground probabilities.
+ * The function displays the foreground probability, refined edges, and the scores.
+ * @param ac: Argument count
+ * @param av: Argument values
+ * @return 0 if successful
+ * @return -1 if input image is not provided
+ */
+int main(int ac, char** av) {
+    // Check if the input image is provided (if input size is not 2, return -1 and show usage message)
+    if (ac != 2) {
+        std::cout << "Usage: ./grabcut_edge_detection <image_path>" << std::endl;
+        return -1;
+    }
 
-    // Ensure the image is 3-channel
-    if (image.channels() == 1) cv::cvtColor(image, image, cv::COLOR_GRAY2BGR);
+    // Load the image (ensure the path is correct)
+    std::cout << "Loading image: " << av[1] << std::endl;
 
-    // Create a mask initialized as probable background
-    cv::Mat mask(image.size(), CV_8UC1, cv::GC_PR_BGD);
+    cv::Mat image = cv::imread(av[1], cv::IMREAD_COLOR);  // Load your image here
+    if (image.empty()) {
+        std::cout << "Could not open or find the image!" << std::endl;
+        return -1;
+    }
 
-    // Define a bounding box
-    int margin = 10; // Avoid edges of the image
-    cv::Rect rect(margin, margin, image.cols - 2 * margin, image.rows - 2 * margin);
-    mask(rect).setTo(cv::GC_PR_FGD); // Mark probable foreground inside the box
+    // Convert image to grayscale for edge detection
+    std::cout << "Processing image..." << std::endl;
+    cv::Mat gray_image;
+    cv::cvtColor(image, gray_image, cv::COLOR_BGR2GRAY);
 
-    // Initialize background and foreground models
-    cv::Mat bgd_model, fgd_model;
+    // Apply multi-scale Canny for edge detection
+    std::cout << "Applying multi-scale Canny edge detection..." << std::endl;
+    cv::Mat edges_refined = multi_scale_canny(gray_image);
 
-    // Run GrabCut
-    cv::grabCut(image, mask, rect, bgd_model, fgd_model, 5, cv::GC_INIT_WITH_MASK);
-    // Extract the foreground mask
-    cv::Mat fg_mask = (mask == cv::GC_FGD) | (mask == cv::GC_PR_FGD);
-    std::cout << "Foreground mask extracted." << std::endl;
+    // Compute foreground and background probabilities
+    std::cout << "Computing foreground and background probabilities..." << std::endl;
+    cv::Mat fg_prob;
+    double foreground_score, background_score, edge_weighted_fg;
+    std::tie(fg_prob, foreground_score, background_score, edge_weighted_fg) = compute_foreground_background_probability(image, edges_refined);
+
+    // Print out the probabilities (scores gapped to 1)
+    std::cout << "Foreground Probability Score: " << foreground_score << std::endl;
+    std::cout << "Background Probability Score: " << background_score << std::endl;
+    std::cout << "Edge-Weighted Foreground Score: " << edge_weighted_fg << std::endl;
 
     return 0;
 }
