@@ -156,7 +156,7 @@ int main(int argc, char** argv) {
     // Create a mask initialized as probable background
     cv::Mat mask(image.size(), CV_8UC1, cv::GC_PR_BGD);
 
-    // Define a bounding box (adjust as needed)
+    // Define a bounding box
     int margin = 10; // Avoid edges of the image
     cv::Rect rect(margin, margin, image.cols - 2 * margin, image.rows - 2 * margin);
     mask(rect).setTo(cv::GC_PR_FGD); // Mark probable foreground inside the box
@@ -164,16 +164,11 @@ int main(int argc, char** argv) {
     // Initialize background and foreground models
     cv::Mat bgd_model, fgd_model;
 
-    try {
-        // Run GrabCut
-        cv::grabCut(image, mask, rect, bgd_model, fgd_model, 5, cv::GC_INIT_WITH_MASK);
-
-        // Extract the foreground mask
-        cv::Mat fg_mask = (mask == cv::GC_FGD) | (mask == cv::GC_PR_FGD);
-        std::cout << "Foreground mask extracted." << std::endl;
-    } catch (const cv::Exception& e) {
-        std::cerr << "OpenCV Error: " << e.what() << std::endl;
-    }
+    // Run GrabCut
+    cv::grabCut(image, mask, rect, bgd_model, fgd_model, 5, cv::GC_INIT_WITH_MASK);
+    // Extract the foreground mask
+    cv::Mat fg_mask = (mask == cv::GC_FGD) | (mask == cv::GC_PR_FGD);
+    std::cout << "Foreground mask extracted." << std::endl;
 
     return 0;
 }
