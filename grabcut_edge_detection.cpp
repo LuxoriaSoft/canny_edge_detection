@@ -140,12 +140,6 @@ std::tuple<cv::Mat, double, double, double> compute_foreground_background_probab
 }
 
 int main(int argc, char** argv) {
-    // Check if an image path is provided
-    if (argc != 2) {
-        std::cerr << "Usage: " << argv[0] << " <image_path>" << std::endl;
-        return -1;
-    }
-
     // Load image from file
     cv::Mat image = cv::imread(argv[1], cv::IMREAD_COLOR);
     if (image.empty()) return -1;
