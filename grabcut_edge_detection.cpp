@@ -54,27 +54,40 @@ cv::Mat grabcut_foreground(const cv::Mat& image) {
 }
 
 std::tuple<cv::Mat, double, double, double> compute_foreground_background_probability(const cv::Mat& image_rgb, const cv::Mat& edges_refined) {
+    std::cout << "Computing foreground and background probabilities... ";
     cv::Mat fg_prob = grabcut_foreground(image_rgb);  // Get foreground probability
+    std::cout << "done!" << std::endl;
 
+    std::cout << "Normalizing foreground probability to [0, 1]... ";
     fg_prob.convertTo(fg_prob, CV_64F, 1.0 / 255.0);  // Normalize fg_prob to range [0, 1]
+    std::cout << "done!" << std::endl;
 
     // Ensure both fg_prob and edges_refined are of the same type (CV_64F for floating-point operations)
+    std::cout << "Converting edge map to floating-point... ";
     if (fg_prob.type() != CV_64F) {
         fg_prob.convertTo(fg_prob, CV_64F);
     }
+    std::cout << "done!" << std::endl;
+
+    std::cout << "Converting edge map to floating-point... ";
     cv::Mat edges_refined_64F;
     edges_refined.convertTo(edges_refined_64F, CV_64F);
     edges_refined_64F /= 255.0;  // Normalize edges_refined to [0, 1]
+    std::cout << "done!" << std::endl;
 
     // Calculate the foreground score (mean of foreground probability)
+    std::cout << "Calculating foreground and background scores... ";
     double foreground_score = cv::mean(fg_prob)[0];
     double background_score = 1.0 - foreground_score;  // Background is the complement
+    std::cout << "done!" << std::endl;
 
     // Calculate edge-weighted foreground score (based on refined edges)
+    std::cout << "Calculating edge-weighted foreground score... ";
     double edge_weighted_fg = 0.0;
     if (cv::sum(edges_refined_64F)[0] > 0) {  // Check if edges exist
         edge_weighted_fg = cv::sum(fg_prob.mul(edges_refined_64F))[0] / cv::sum(edges_refined_64F)[0];
     }
+    std::cout << "done!" << std::endl;
 
     return std::make_tuple(fg_prob, foreground_score, background_score, edge_weighted_fg);
 }
