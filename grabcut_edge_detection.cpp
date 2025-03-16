@@ -139,32 +139,38 @@ std::tuple<cv::Mat, double, double, double> compute_foreground_background_probab
     return std::make_tuple(fg_prob, foreground_score, background_score, edge_weighted_fg);
 }
 
-int main() {
-    // Create a synthetic image (100x100 solid gray)
-    cv::Mat image(100, 100, CV_8UC3, cv::Scalar(128, 128, 128));
-
-    // Add a foreground object (white rectangle)
-    cv::rectangle(image, cv::Point(30, 30), cv::Point(70, 70), cv::Scalar(255, 255, 255), -1);
-
-    // Ensure image is 3-channel
-    if (image.channels() == 1) {
-        cv::cvtColor(image, image, cv::COLOR_GRAY2BGR);
+int main(int argc, char** argv) {
+    // Check if an image path is provided
+    if (argc != 2) {
+        std::cerr << "Usage: " << argv[0] << " <image_path>" << std::endl;
+        return -1;
     }
 
-    // Initialize the GrabCut mask (probable background)
+    // Load image from file
+    cv::Mat image = cv::imread(argv[1], cv::IMREAD_COLOR);
+    if (image.empty()) return -1;
+
+    // Ensure the image is 3-channel
+    if (image.channels() == 1) cv::cvtColor(image, image, cv::COLOR_GRAY2BGR);
+
+    // Create a mask initialized as probable background
     cv::Mat mask(image.size(), CV_8UC1, cv::GC_PR_BGD);
-    mask(cv::Rect(30, 30, 40, 40)).setTo(cv::GC_PR_FGD);  // Mark center as probable foreground
+
+    // Define a bounding box (adjust as needed)
+    int margin = 10; // Avoid edges of the image
+    cv::Rect rect(margin, margin, image.cols - 2 * margin, image.rows - 2 * margin);
+    mask(rect).setTo(cv::GC_PR_FGD); // Mark probable foreground inside the box
+
+    // Initialize background and foreground models
+    cv::Mat bgd_model, fgd_model;
 
     try {
-        // Apply GrabCut
-        cv::Mat bgd_model, fgd_model;
-        cv::grabCut(image, mask, cv::Rect(), bgd_model, fgd_model, 5, cv::GC_INIT_WITH_MASK);
+        // Run GrabCut
+        cv::grabCut(image, mask, rect, bgd_model, fgd_model, 5, cv::GC_INIT_WITH_MASK);
 
-        // Extract foreground mask
+        // Extract the foreground mask
         cv::Mat fg_mask = (mask == cv::GC_FGD) | (mask == cv::GC_PR_FGD);
-        fg_mask.convertTo(fg_mask, CV_8U, 255);  // Convert to 0-255 for visualization
-
-        std::cout << "Foreground mask computed successfully!" << std::endl;
+        std::cout << "Foreground mask extracted." << std::endl;
     } catch (const cv::Exception& e) {
         std::cerr << "OpenCV Error: " << e.what() << std::endl;
     }
