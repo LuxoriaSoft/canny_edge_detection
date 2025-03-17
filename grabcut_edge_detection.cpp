@@ -3,6 +3,12 @@
 #include <tuple>
 #include <vector>
 
+/**
+ * @brief Apply multi-scale Canny edge detection to an image.
+ * @param image The input image.
+ * @param sigma_list A list of Gaussian kernel standard deviations for blurring.
+ * @return The refined edges image.
+ */
 cv::Mat multi_scale_canny(const cv::Mat& image, const std::vector<double>& sigma_list = {1.0, 2.0, 3.0}) {
     cv::Mat edges_combined = cv::Mat::zeros(image.size(), CV_8U);
 
@@ -22,6 +28,11 @@ cv::Mat multi_scale_canny(const cv::Mat& image, const std::vector<double>& sigma
     return edges_refined;
 }
 
+/**
+ * @brief Apply a simple GrabCut algorithm to an image to extract the foreground.
+ * @param image The input image.
+ * @return The binary mask of the foreground.
+ */
 cv::Mat simple_grabcut_foreground(const cv::Mat& image) {
     cv::Mat gray_image;
     cv::cvtColor(image, gray_image, cv::COLOR_BGR2GRAY);
@@ -36,6 +47,45 @@ cv::Mat simple_grabcut_foreground(const cv::Mat& image) {
     return mask;
 }
 
+/**
+ * @brief Apply an upgraded GrabCut algorithm to an image to extract the foreground.
+ * @param image The input image.
+ * @return The binary mask of the foreground.
+ */
+cv::Mat upgraded_grabcut_foreground(const cv::Mat& image) {
+    // Apply bilateral filtering to smooth the image while preserving edges
+    cv::Mat filtered_image;
+    cv::bilateralFilter(image, filtered_image, 9, 75, 75);
+
+    // Convert the image to the Lab color space for better color segmentation
+    cv::Mat lab_image;
+    cv::cvtColor(filtered_image, lab_image, cv::COLOR_BGR2Lab);
+
+    // Split the Lab image into L, a, and b channels
+    std::vector<cv::Mat> lab_channels(3);
+    cv::split(lab_image, lab_channels);
+
+    // Apply Otsu's thresholding on the a-channel (which often captures color edges well)
+    cv::Mat mask;
+    cv::threshold(lab_channels[1], mask, 0, 255, cv::THRESH_BINARY | cv::THRESH_OTSU);
+
+    // Apply morphological operations to clean up the mask
+    cv::Mat morph_mask;
+    cv::morphologyEx(mask, morph_mask, cv::MORPH_CLOSE, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5, 5)));
+    cv::morphologyEx(morph_mask, morph_mask, cv::MORPH_OPEN, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5, 5)));
+
+    // Convert the mask to double for further processing
+    morph_mask.convertTo(morph_mask, CV_64F);
+
+    return morph_mask;
+}
+
+/**
+ * @brief Compute the foreground and background probabilities of an image using GrabCut and edge detection.
+ * @param image_rgb The input image in RGB color space.
+ * @param edges_refined The refined edges image.
+ * @return A tuple containing the foreground probability mask, foreground score, background score, and edge-weighted foreground score.
+ */
 std::tuple<cv::Mat, double, double, double> compute_foreground_background_probability(
     const cv::Mat& image_rgb, const cv::Mat& edges_refined) {
 
@@ -72,6 +122,12 @@ std::tuple<cv::Mat, double, double, double> compute_foreground_background_probab
     return std::make_tuple(fg_prob, foreground_score, background_score, edge_weighted_fg);
 }
 
+/**
+ * @brief Main function to demonstrate GrabCut with edge detection.
+ * @param ac The number of command-line arguments.
+ * @param av The command-line arguments.
+ * @return The exit status.
+ */
 int main(int ac, char** av) {
     if (ac != 2) {
         std::cout << "Usage: ./grabcut_edge_detection <image_path>" << std::endl;
