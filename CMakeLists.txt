@@ -37,6 +37,9 @@ if(MSVC)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
+# Add the executable
+add_executable(grabcut_edge_detection grabcut_edge_detection.cpp)
+
 # Add the includes folder to the include directories
 target_include_directories(grabcut_edge_detection PUBLIC ${CMAKE_SOURCE_DIR}/includes)
 
