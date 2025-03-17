@@ -16,53 +16,38 @@ cv::Mat multi_scale_canny(const cv::Mat& image, const std::vector<double>& sigma
     }
 
     cv::Mat edges_refined;
-    cv::morphologyEx(edges_combined, edges_refined, cv::MORPH_CLOSE, 
+    cv::morphologyEx(edges_combined, edges_refined, cv::MORPH_CLOSE,
                      cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3)));
 
     return edges_refined;
 }
 
-cv::Mat grabcut_foreground(const cv::Mat& image) {
-    cv::Mat mask = cv::Mat::zeros(image.size(), CV_8UC1);
-    mask.setTo(cv::GC_BGD);  // Initialize all pixels as background
+cv::Mat simple_grabcut_foreground(const cv::Mat& image) {
+    cv::Mat gray_image;
+    cv::cvtColor(image, gray_image, cv::COLOR_BGR2GRAY);
 
-    cv::Mat bgd_model, fgd_model;
-    bgd_model.create(1, 65, CV_64F);
-    fgd_model.create(1, 65, CV_64F);
+    // Apply a simple threshold to create an initial binary mask
+    cv::Mat mask;
+    cv::threshold(gray_image, mask, 0, 255, cv::THRESH_BINARY | cv::THRESH_OTSU);
 
-    int border = std::max(5, std::min(image.cols, image.rows) / 10); // Ensure at least 5 pixels of border
-    cv::Rect rect(border, border, image.cols - 2 * border, image.rows - 2 * border);
+    // Convert the mask to double for further processing
+    mask.convertTo(mask, CV_64F);
 
-    if (rect.width <= 1 || rect.height <= 1) {
-        std::cerr << "Error: Bounding box is too small!" << std::endl;
-        return cv::Mat::zeros(image.size(), CV_8UC1);
-    }
-
-    try {
-        cv::grabCut(image, mask, rect, bgd_model, fgd_model, 5, cv::GC_INIT_WITH_RECT);
-    } catch (const cv::Exception& e) {
-        std::cerr << "OpenCV Exception: " << e.what() << std::endl;
-        return cv::Mat::zeros(image.size(), CV_8UC1);
-    }
-
-    cv::Mat fg_mask = (mask == cv::GC_FGD) | (mask == cv::GC_PR_FGD);
-    fg_mask.convertTo(fg_mask, CV_64F);  // Convert to double
-
-    return fg_mask;
+    return mask;
 }
 
 std::tuple<cv::Mat, double, double, double> compute_foreground_background_probability(
     const cv::Mat& image_rgb, const cv::Mat& edges_refined) {
-    
-    std::cout << "Computing foreground and background probabilities... ";
-    cv::Mat fg_prob = grabcut_foreground(image_rgb);  
+
+    std::cout << "Computing grabcut mask... ";
+    cv::Mat fg_prob = simple_grabcut_foreground(image_rgb);
     std::cout << "done!" << std::endl;
 
     // Ensure binary mask before normalization
     fg_prob = (fg_prob > 0);
     fg_prob.convertTo(fg_prob, CV_64F);
 
-    // Fix: Use minMaxLoc to find the actual max value in the matrix
+    // Use minMaxLoc to find the actual max value in the matrix
     double minVal, max_prob;
     cv::minMaxLoc(fg_prob, &minVal, &max_prob);
 
@@ -80,7 +65,7 @@ std::tuple<cv::Mat, double, double, double> compute_foreground_background_probab
 
     double edge_weighted_fg = 0.0;
     if (cv::sum(edges_refined_64F)[0] > 0) {
-        edge_weighted_fg = cv::sum(fg_prob.mul(edges_refined_64F))[0] / 
+        edge_weighted_fg = cv::sum(fg_prob.mul(edges_refined_64F))[0] /
                            std::max(1.0, cv::sum(edges_refined_64F)[0]);
     }
 
@@ -93,7 +78,7 @@ int main(int ac, char** av) {
         return -1;
     }
 
-    cv::Mat image = cv::imread(av[1], cv::IMREAD_COLOR);  
+    cv::Mat image = cv::imread(av[1], cv::IMREAD_COLOR);
     if (image.empty()) {
         std::cout << "Could not open or find the image!" << std::endl;
         return -1;
@@ -101,7 +86,7 @@ int main(int ac, char** av) {
 
     if (image.cols < 100 || image.rows < 100) {
         std::cout << "Resizing image to avoid failure with GrabCut..." << std::endl;
-        cv::resize(image, image, cv::Size(100, 100));  
+        cv::resize(image, image, cv::Size(100, 100));
     }
 
     std::cout << "Loaded image with size: " << image.cols << " x " << image.rows << std::endl;
@@ -110,12 +95,12 @@ int main(int ac, char** av) {
     cv::cvtColor(image, gray_image, cv::COLOR_BGR2GRAY);
 
     std::cout << "Applying multi-scale Canny edge detection..." << std::endl;
-    cv::Mat edges_refined = multi_scale_canny(gray_image);  
+    cv::Mat edges_refined = multi_scale_canny(gray_image);
 
     std::cout << "Computing foreground and background probabilities..." << std::endl;
     cv::Mat fg_prob;
     double foreground_score, background_score, edge_weighted_fg;
-    std::tie(fg_prob, foreground_score, background_score, edge_weighted_fg) = 
+    std::tie(fg_prob, foreground_score, background_score, edge_weighted_fg) =
         compute_foreground_background_probability(image, edges_refined);
 
     std::cout << "Foreground Probability Score: " << foreground_score << std::endl;
