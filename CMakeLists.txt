@@ -34,8 +34,8 @@ endif()
 
 # Set MSVC runtime library
 if(MSVC)
-    # Ensure /MD (dynamic runtime) is used when /clr is enabled
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL$<$<CONFIG:Debug>:Debug>")
+    # Force using /MD (MultiThreadedDLL) runtime
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
     
     # Apply /clr flag only to GrabCutWrapper.cpp (C++/CLI)
     set_source_files_properties(GrabCutWrapper.cpp PROPERTIES COMPILE_FLAGS "/clr")
@@ -59,6 +59,6 @@ set_target_properties(grabcut_edge_detection PROPERTIES
 )
 
 # Suppress library conflicts for MSVC
-if(MSVC)
+#if(MSVC)
     target_link_options(grabcut_edge_detection PRIVATE "/NODEFAULTLIB:library")
-endif()
+#endif()
