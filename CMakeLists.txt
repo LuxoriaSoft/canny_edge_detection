@@ -6,6 +6,9 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Enable CLR support for C++/CLI
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /clr")
+
 # Set the build type to Release
 set(CMAKE_BUILD_TYPE Release)
 
