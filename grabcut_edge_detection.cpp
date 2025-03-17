@@ -1,185 +1,171 @@
 /**
- * GrabCut with Multi-Scale Canny Edge Detection:
- *
- * This program integrates the GrabCut algorithm with multi-scale Canny edge detection
- * to segment the foreground from the background in an image. The primary goal is to compute foreground
- * and background probabilities and visualize the results.
- *
- * Key Components and Workflow:
- *
- * 1. Multi-Scale Canny Edge Detection:
- *    - The program applies Canny edge detection at multiple scales (using different Gaussian smoothing
- *      levels) to detect edges in the input image.
- *    - The edges detected at different scales are combined and refined using morphological operations
- *      to close small gaps.
- *    - Algorithm: Canny edge detection with Gaussian smoothing and morphological closing.
- *
- * 2. GrabCut Segmentation:
- *    - The GrabCut algorithm is used to segment the foreground from the background in the image.
- *    - A bounding box is defined to initialize the segmentation process, and the algorithm iteratively
- *      refines the segmentation based on color statistics.
- *    - Algorithm: GrabCut for foreground-background segmentation.
- *
- * 3. Foreground and Background Probability Computation:
- *    - The foreground probability is computed from the GrabCut segmentation result.
- *    - The program calculates the mean foreground probability and an edge-weighted foreground score,
- *      which considers the overlap between the foreground and the detected edges.
- *    - Algorithm: Mean calculation and edge-weighted scoring.
- *
- * 4. Implementation:
- *    - The program is implemented using OpenCV, a popular computer vision library.
- *    - It reads an input image, processes it to detect edges and segment the foreground, and then
- *      computes various scores to quantify the segmentation quality.
- *    - The results are displayed using OpenCV's visualization functions.
- *
- * 5. Output:
- *    - The program outputs the foreground probability score, background probability score, and
- *      edge-weighted foreground score.
- *    - It also displays the foreground probability map and the refined edges for visual inspection.
- *
- * Usage:
- * - The program is executed from the command line with the path to an input image as an argument.
- * - Example: ./grabcut_edge_detection <image_path>
+ * GrabCut with Edge Detection
+ * This program returns the foreground/background probabilities of an image using GrabCut and edge detection.
+ * The score is gapped between 0 and 1, where 0 indicates the background and 1 indicates the foreground.
  */
-
 #include <opencv2/opencv.hpp>
 #include <iostream>
 #include <tuple>
 #include <vector>
 
 /**
- * This function applies multi-scale Canny edge detection to an input image.
- * It returns the refined edges after morphological closing.
- * The function takes an input image and a list of sigma values for Gaussian smoothing.
- * The default sigma values are {1.0, 2.0, 3.0}.
- * @param image: Input image (grayscale)
- * @param sigma_list: List of sigma values for Gaussian smoothing
- * @return edges_refined: Refined edges after morphological closing
+ * @brief Apply multi-scale Canny edge detection to an image.
+ * @param image The input image.
+ * @param sigma_list A list of Gaussian kernel standard deviations for blurring.
+ * @return The refined edges image.
  */
 cv::Mat multi_scale_canny(const cv::Mat& image, const std::vector<double>& sigma_list = {1.0, 2.0, 3.0}) {
     cv::Mat edges_combined = cv::Mat::zeros(image.size(), CV_8U);
 
     for (double sigma : sigma_list) {
         cv::Mat blurred;
-        cv::GaussianBlur(image, blurred, cv::Size(5, 5), sigma);  // Gaussian smoothing
+        int kernel_size = std::max(3, static_cast<int>(std::round(sigma * 2.0 + 1)));
+        cv::GaussianBlur(image, blurred, cv::Size(kernel_size, kernel_size), sigma);
         cv::Mat edges;
-        cv::Canny(blurred, edges, 50, 150);  // Canny edge detection
-        edges_combined = cv::max(edges_combined, edges);  // Combine edges across scales
+        cv::Canny(blurred, edges, 50, 150);
+        edges_combined = cv::max(edges_combined, edges);
     }
 
-    // Close small gaps in edges (morphological closing)
     cv::Mat edges_refined;
-    cv::morphologyEx(edges_combined, edges_refined, cv::MORPH_CLOSE, cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3)));
+    cv::morphologyEx(edges_combined, edges_refined, cv::MORPH_CLOSE,
+                     cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3)));
 
     return edges_refined;
 }
 
 /**
- * This function applies GrabCut algorithm to an input image and returns the foreground mask.
- * The function takes an input image and returns a binary mask where 1 represents the foreground.
- * @param image: Input image (BGR)
- * @return fg_mask: Foreground mask (binary)
+ * @brief Apply a simple GrabCut algorithm to an image to extract the foreground.
+ * This function converts the input image to grayscale, applies Otsu's thresholding
+ * to create a binary mask, and then converts the mask to a double precision matrix.
+ * @param image The input image.
+ * @return The binary mask of the foreground.
  */
-cv::Mat grabcut_foreground(const cv::Mat& image) {
-    cv::Mat mask = cv::Mat::zeros(image.size(), CV_8UC1);
+cv::Mat simple_grabcut_foreground(const cv::Mat& image) {
+    cv::Mat gray_image;
+    cv::cvtColor(image, gray_image, cv::COLOR_BGR2GRAY);
 
-    // Background and foreground models, required by GrabCut
-    cv::Mat bgd_model, fgd_model;
-    bgd_model.create(1, 65, CV_64F);
-    fgd_model.create(1, 65, CV_64F);
+    // Apply a simple threshold to create an initial binary mask
+    cv::Mat mask;
+    cv::threshold(gray_image, mask, 0, 255, cv::THRESH_BINARY | cv::THRESH_OTSU);
 
-    // Define a bounding box (adjust based on the input image)
-    cv::Rect rect(50, 50, image.cols - 100, image.rows - 100);  // x, y, width, height
+    // Convert the mask to double for further processing
+    mask.convertTo(mask, CV_64F);
 
-    // Run GrabCut
-    cv::grabCut(image, mask, rect, bgd_model, fgd_model, 5, cv::GC_INIT_WITH_RECT);
-
-    // Mask the background pixels as 0 and foreground pixels as 1
-    cv::Mat fg_mask = (mask == cv::GC_FGD) | (mask == cv::GC_PR_FGD);  // Foreground mask
-    fg_mask.convertTo(fg_mask, CV_64F); // Convert mask to CV_64F for further computation
-
-    return fg_mask;
+    return mask;
 }
 
 /**
- * This function computes the foreground and background probabilities based on the input image and refined edges.
- * The function returns the foreground probability, foreground score, background score, and edge-weighted foreground score.
- * @param image_rgb: Input image (BGR)
- * @param edges_refined: Refined edges (binary)
- * @return fg_prob: Foreground probability (floating point)
- * @return foreground_score: Foreground probability score (mean)
- * @return background_score: Background probability score (complement of foreground)
+ * @brief Apply an upgraded GrabCut algorithm to an image to extract the foreground.
+ * @param image The input image.
+ * @return The binary mask of the foreground.
  */
-std::tuple<cv::Mat, double, double, double> compute_foreground_background_probability(const cv::Mat& image_rgb, const cv::Mat& edges_refined) {
-    cv::Mat fg_prob = grabcut_foreground(image_rgb); // Get foreground probability
+cv::Mat upgraded_grabcut_foreground(const cv::Mat& image) {
+    // Apply bilateral filtering to smooth the image while preserving edges
+    cv::Mat filtered_image;
+    cv::bilateralFilter(image, filtered_image, 9, 75, 75);
 
-    // Normalize fg_prob to range [0, 1]
-    fg_prob.convertTo(fg_prob, CV_64F, 1.0 / 255.0);  // Normalize to [0, 1]
+    // Convert the image to the Lab color space for better color segmentation
+    cv::Mat lab_image;
+    cv::cvtColor(filtered_image, lab_image, cv::COLOR_BGR2Lab);
 
-    // Ensure both fg_prob and edges_refined are of the same type (CV_64F for floating point operations)
-    if (fg_prob.type() != CV_64F) {
-        fg_prob.convertTo(fg_prob, CV_64F);
+    // Split the Lab image into L, a, and b channels
+    std::vector<cv::Mat> lab_channels(3);
+    cv::split(lab_image, lab_channels);
+
+    // Apply Otsu's thresholding on the a-channel (which often captures color edges well)
+    cv::Mat mask;
+    cv::threshold(lab_channels[1], mask, 0, 255, cv::THRESH_BINARY | cv::THRESH_OTSU);
+
+    // Apply morphological operations to clean up the mask
+    cv::Mat morph_mask;
+    cv::morphologyEx(mask, morph_mask, cv::MORPH_CLOSE, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5, 5)));
+    cv::morphologyEx(morph_mask, morph_mask, cv::MORPH_OPEN, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5, 5)));
+
+    // Convert the mask to double for further processing
+    morph_mask.convertTo(morph_mask, CV_64F);
+
+    return morph_mask;
+}
+
+/**
+ * @brief Compute the foreground and background probabilities of an image using GrabCut and edge detection.
+ * @param image_rgb The input image in RGB color space.
+ * @param edges_refined The refined edges image.
+ * @return A tuple containing the foreground probability mask, foreground score, background score, and edge-weighted foreground score.
+ */
+std::tuple<cv::Mat, double, double, double> compute_foreground_background_probability(
+    const cv::Mat& image_rgb, const cv::Mat& edges_refined) {
+
+    std::cout << "Computing grabcut mask... ";
+    cv::Mat fg_prob = simple_grabcut_foreground(image_rgb);
+    std::cout << "done!" << std::endl;
+
+    // Ensure binary mask before normalization
+    fg_prob = (fg_prob > 0);
+    fg_prob.convertTo(fg_prob, CV_64F);
+
+    // Use minMaxLoc to find the actual max value in the matrix
+    double minVal, max_prob;
+    cv::minMaxLoc(fg_prob, &minVal, &max_prob);
+
+    if (max_prob > 0) {
+        fg_prob /= max_prob;  // Normalize to range [0,1]
     }
+
+    double foreground_score = cv::mean(fg_prob)[0];
+    foreground_score = std::clamp(foreground_score, 0.0, 1.0);
+    double background_score = 1.0 - foreground_score;
+
     cv::Mat edges_refined_64F;
     edges_refined.convertTo(edges_refined_64F, CV_64F);
-
-    // Normalize edges_refined to [0, 1]
     edges_refined_64F /= 255.0;
 
-    // Calculate the foreground score (mean of foreground probability)
-    double foreground_score = cv::mean(fg_prob)[0];
-    double background_score = 1.0 - foreground_score;  // Background is the complement
-
-    // Calculate the edge-weighted foreground score (based on refined edges)
     double edge_weighted_fg = 0.0;
-    if (cv::sum(edges_refined_64F)[0] > 0) {  // Check if edges exist
-        edge_weighted_fg = cv::sum(fg_prob.mul(edges_refined_64F))[0] / cv::sum(edges_refined_64F)[0];
+    if (cv::sum(edges_refined_64F)[0] > 0) {
+        edge_weighted_fg = cv::sum(fg_prob.mul(edges_refined_64F))[0] /
+                           std::max(1.0, cv::sum(edges_refined_64F)[0]);
     }
 
     return std::make_tuple(fg_prob, foreground_score, background_score, edge_weighted_fg);
 }
 
 /**
- * Main function to demonstrate GrabCut with edge detection.
- * The function loads an input image, applies multi-scale Canny edge detection, and computes foreground probabilities.
- * The function displays the foreground probability, refined edges, and the scores.
- * @param ac: Argument count
- * @param av: Argument values
- * @return 0 if successful
- * @return -1 if input image is not provided
+ * @brief Main function to demonstrate GrabCut with edge detection.
+ * @param ac The number of command-line arguments.
+ * @param av The command-line arguments.
+ * @return The exit status.
  */
 int main(int ac, char** av) {
-    // Check if the input image is provided (if input size is not 2, return -1 and show usage message)
     if (ac != 2) {
         std::cout << "Usage: ./grabcut_edge_detection <image_path>" << std::endl;
         return -1;
     }
 
-    // Load the image (ensure the path is correct)
-    std::cout << "Loading image: " << av[1] << std::endl;
-
-    cv::Mat image = cv::imread(av[1], cv::IMREAD_COLOR);  // Load your image here
+    cv::Mat image = cv::imread(av[1], cv::IMREAD_COLOR);
     if (image.empty()) {
         std::cout << "Could not open or find the image!" << std::endl;
         return -1;
     }
 
-    // Convert image to grayscale for edge detection
-    std::cout << "Processing image..." << std::endl;
+    if (image.cols < 100 || image.rows < 100) {
+        std::cout << "Resizing image to avoid failure with GrabCut..." << std::endl;
+        cv::resize(image, image, cv::Size(100, 100));
+    }
+
+    std::cout << "Loaded image with size: " << image.cols << " x " << image.rows << std::endl;
+
     cv::Mat gray_image;
     cv::cvtColor(image, gray_image, cv::COLOR_BGR2GRAY);
 
-    // Apply multi-scale Canny for edge detection
     std::cout << "Applying multi-scale Canny edge detection..." << std::endl;
     cv::Mat edges_refined = multi_scale_canny(gray_image);
 
-    // Compute foreground and background probabilities
     std::cout << "Computing foreground and background probabilities..." << std::endl;
     cv::Mat fg_prob;
     double foreground_score, background_score, edge_weighted_fg;
-    std::tie(fg_prob, foreground_score, background_score, edge_weighted_fg) = compute_foreground_background_probability(image, edges_refined);
+    std::tie(fg_prob, foreground_score, background_score, edge_weighted_fg) =
+        compute_foreground_background_probability(image, edges_refined);
 
-    // Print out the probabilities (scores gapped to 1)
     std::cout << "Foreground Probability Score: " << foreground_score << std::endl;
     std::cout << "Background Probability Score: " << background_score << std::endl;
     std::cout << "Edge-Weighted Foreground Score: " << edge_weighted_fg << std::endl;
