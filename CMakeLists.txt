@@ -34,8 +34,11 @@ endif()
 
 # Set MSVC runtime library
 if(MSVC)
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /clr")  # Enable /clr only for MSVC
+    # Ensure /MD (dynamic runtime) is used when /clr is enabled
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL$<$<CONFIG:Debug>:Debug>")
+    
+    # Apply /clr flag only to GrabCutWrapper.cpp (C++/CLI)
+    set_source_files_properties(GrabCutWrapper.cpp PROPERTIES COMPILE_FLAGS "/clr")
 endif()
 
 # Add the DLL adapter and core GrabCut class
