@@ -1,3 +1,8 @@
+/**
+ * GrabCut with Edge Detection
+ * This program returns the foreground/background probabilities of an image using GrabCut and edge detection.
+ * The score is gapped between 0 and 1, where 0 indicates the background and 1 indicates the foreground.
+ */
 #include <opencv2/opencv.hpp>
 #include <iostream>
 #include <tuple>
@@ -28,11 +33,6 @@ cv::Mat multi_scale_canny(const cv::Mat& image, const std::vector<double>& sigma
     return edges_refined;
 }
 
-/**
- * @brief Apply a simple GrabCut algorithm to an image to extract the foreground.
- * @param image The input image.
- * @return The binary mask of the foreground.
- */
 /**
  * @brief Apply a simple GrabCut algorithm to an image to extract the foreground.
  * This function converts the input image to grayscale, applies Otsu's thresholding
