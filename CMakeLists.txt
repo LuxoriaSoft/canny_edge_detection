@@ -6,9 +6,6 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Enable CLR support for C++/CLI
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /clr")
-
 # Set the build type to Release
 set(CMAKE_BUILD_TYPE Release)
 
@@ -35,17 +32,14 @@ if(NOT OpenCV_FOUND)
     message(FATAL_ERROR "OpenCV not found. Please install OpenCV and make sure it's in the CMake search path.")
 endif()
 
-# Set MSVC runtime library (for Windows) based on build type
+# Set MSVC runtime library
 if(MSVC)
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDebugDLL")
-    else()
-        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
-    endif()
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /clr")  # Enable /clr only for MSVC
 endif()
 
-# Add a new source file that includes the header file and uses the GrabCutWrapper class
-add_library(grabcut_edge_detection SHARED GrabCutDLLEntrypoint.cpp)
+# Add the DLL adapter and core GrabCut class
+add_library(grabcut_edge_detection SHARED GrabCut.cpp GrabCutWrapper.cpp)
 
 # Add the includes folder to the include directories
 target_include_directories(grabcut_edge_detection PUBLIC ${CMAKE_SOURCE_DIR}/includes)
