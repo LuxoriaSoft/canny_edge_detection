@@ -33,6 +33,13 @@ cv::Mat multi_scale_canny(const cv::Mat& image, const std::vector<double>& sigma
  * @param image The input image.
  * @return The binary mask of the foreground.
  */
+/**
+ * @brief Apply a simple GrabCut algorithm to an image to extract the foreground.
+ * This function converts the input image to grayscale, applies Otsu's thresholding
+ * to create a binary mask, and then converts the mask to a double precision matrix.
+ * @param image The input image.
+ * @return The binary mask of the foreground.
+ */
 cv::Mat simple_grabcut_foreground(const cv::Mat& image) {
     cv::Mat gray_image;
     cv::cvtColor(image, gray_image, cv::COLOR_BGR2GRAY);
