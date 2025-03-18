@@ -32,17 +32,8 @@ if(NOT OpenCV_FOUND)
     message(FATAL_ERROR "OpenCV not found. Please install OpenCV and make sure it's in the CMake search path.")
 endif()
 
-# Set MSVC runtime library
-if(MSVC)
-    # Force using /MD (MultiThreadedDLL) runtime
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
-    
-    # Apply /clr flag only to GrabCutWrapper.cpp (C++/CLI)
-    set_source_files_properties(GrabCutWrapper.cpp PROPERTIES COMPILE_FLAGS "/clr")
-endif()
-
-# Add the DLL adapter and core GrabCut class
-add_library(grabcut_edge_detection SHARED GrabCut.cpp GrabCutWrapper.cpp)
+# Create the C++ DLL
+add_library(grabcut_edge_detection SHARED GrabCut.cpp)
 
 # Add the includes folder to the include directories
 target_include_directories(grabcut_edge_detection PUBLIC ${CMAKE_SOURCE_DIR}/includes)
@@ -50,15 +41,7 @@ target_include_directories(grabcut_edge_detection PUBLIC ${CMAKE_SOURCE_DIR}/inc
 # Link OpenCV libraries
 target_link_libraries(grabcut_edge_detection ${OpenCV_LIBS})
 
-# Optional: Add include directories for OpenCV headers
-include_directories(${OpenCV_INCLUDE_DIRS})
-
-# Set the output directory for the built executable
+# Set the output directory for the built DLL
 set_target_properties(grabcut_edge_detection PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )
-
-# Suppress library conflicts for MSVC
-#if(MSVC)
-    target_link_options(grabcut_edge_detection PRIVATE "/NODEFAULTLIB:library")
-#endif()
